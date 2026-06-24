@@ -12,6 +12,7 @@ import {
   KeyRound,
   LayoutDashboard,
   Upload,
+  Users,
   Wrench,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -40,11 +41,6 @@ const navItems: NavItem[] = [
     path: '/schedule',
   },
   {
-    icon: <Building2 size={20} />,
-    name: 'Rooms',
-    path: '/rooms',
-  },
-  {
     icon: <ClipboardList size={20} />,
     name: 'Reservations',
     path: '/reservations',
@@ -53,6 +49,16 @@ const navItems: NavItem[] = [
     icon: <ClipboardList size={20} />,
     name: 'Requests',
     path: '/requests',
+  },
+  {
+    icon: <Users size={20} />,
+    name: 'Users',
+    path: '/users',
+  },
+  {
+    icon: <Building2 size={20} />,
+    name: 'Rooms',
+    path: '/rooms',
   },
   {
     icon: <Wrench size={20} />,
