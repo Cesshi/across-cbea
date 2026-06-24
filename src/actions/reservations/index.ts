@@ -293,10 +293,11 @@ export async function batchImport(
 
 /* ─── Danger Zone ─── */
 
-export async function clearAllReservations() {
-  await prisma.reservation.deleteMany();
+export async function clearAllReservations(): Promise<{ count: number }> {
+  const { count } = await prisma.reservation.deleteMany();
   revalidatePath('/reservations');
   revalidatePath('/requests');
   revalidatePath('/schedule');
   revalidatePath('/dashboard');
+  return { count };
 }
