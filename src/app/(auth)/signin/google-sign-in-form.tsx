@@ -2,15 +2,11 @@
 
 import { Button } from '@/components/ui';
 import { supabase } from '@/lib';
-import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 export function GoogleSignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const searchParams = useSearchParams();
-
-  const domainError = searchParams.get('error') === 'domain';
 
   const handleSignIn = async () => {
     setIsLoading(true);
@@ -20,7 +16,7 @@ export function GoogleSignInForm() {
       provider: 'google',
       options: {
         redirectTo: `${siteUrl}/auth/callback`,
-        queryParams: { hd: 'up.edu.ph', prompt: 'select_account' },
+        queryParams: { prompt: 'select_account' },
       },
     });
     if (error) {
@@ -31,11 +27,9 @@ export function GoogleSignInForm() {
 
   return (
     <div className="space-y-3">
-      {(error || domainError) && (
+      {error && (
         <div className="bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400 rounded-lg px-4 py-3 text-sm">
-          {domainError
-            ? 'Only UP (up.edu.ph) accounts are allowed. Please sign in with your UP Google account.'
-            : error}
+          {error}
         </div>
       )}
 

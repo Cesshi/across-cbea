@@ -3,9 +3,9 @@
 import { GoogleSignInForm } from '@/components/auth';
 import { Button, Input, Label } from '@/components/ui';
 import { SignInFormData, signInSchema, supabase } from '@/lib';
-import { useAuthStore, useThemeStore } from '@/store';
+import { useAuthStore } from '@/store';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -14,7 +14,6 @@ import { useForm } from 'react-hook-form';
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
-  const { theme } = useThemeStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get('from') ?? '/dashboard';
@@ -138,28 +137,6 @@ export function SignInForm() {
           </Button>
         </form>
       </div>
-
-      {/* Bystander quick link */}
-      <Link
-        href="/bystander-report"
-        className="group border-brand-200 hover:border-brand-400 dark:border-brand-700 dark:hover:border-brand-600 flex items-center gap-4 rounded-xl border bg-white p-4 transition-all duration-200 hover:shadow-md dark:bg-white/5"
-      >
-        <div className="bg-brand-50 dark:bg-brand-950 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg">
-          <div className="animate-pulse">
-            <AlertTriangle size={20} color={theme === 'dark' ? '#d65a5a' : '#a11d1d'} />
-          </div>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">Report an Incident</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">
-            Anonymous submission — no account needed
-          </p>
-        </div>
-        <ArrowRight
-          size={16}
-          className="group-hover:text-brand-500 dark:group-hover:text-brand-500 shrink-0 text-gray-300 transition-transform duration-200 group-hover:translate-x-0.5 dark:text-gray-600"
-        />
-      </Link>
     </div>
   );
 }
