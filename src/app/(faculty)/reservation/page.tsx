@@ -2,7 +2,6 @@
 
 import { useApprovedReservations, useCreateReservation } from '@/components/hooks/use-reservations';
 import { useRooms } from '@/components/hooks/use-rooms';
-import { useAuthStore } from '@/store';
 import {
   DAY_PATTERN_MAP,
   RESTRICTED_ROOMS,
@@ -11,11 +10,19 @@ import {
   type DayPattern,
 } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store';
 import { CalendarDays, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
-type Reservation = { id: string; room: string; day: string; time_slot: string; prof: string; subj: string };
+type Reservation = {
+  id: string;
+  room: string;
+  day: string;
+  time_slot: string;
+  prof: string;
+  subj: string;
+};
 type Mode = 'new' | 'change';
 type Step = 'form' | 'success';
 
@@ -48,10 +55,7 @@ function SchedulePickerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-10">
-      <div
-        className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-4xl rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-700">
           <div>
@@ -78,7 +82,7 @@ function SchedulePickerModal({
         </div>
 
         <div className="overflow-x-auto p-4">
-          <table className="w-full min-w-[640px] border-collapse text-xs">
+          <table className="w-full min-w-160 border-collapse text-xs">
             <thead>
               <tr>
                 <th className="w-24 border-b border-gray-200 px-2 py-2 text-left text-gray-500 dark:border-gray-700">
@@ -163,7 +167,8 @@ export default function ReservationPage() {
   const availableRooms = useMemo(
     () =>
       rooms.filter(
-        (r) => r.is_active && !RESTRICTED_ROOMS.includes(r.name as (typeof RESTRICTED_ROOMS)[number])
+        (r) =>
+          r.is_active && !RESTRICTED_ROOMS.includes(r.name as (typeof RESTRICTED_ROOMS)[number])
       ),
     [rooms]
   );
@@ -214,9 +219,7 @@ export default function ReservationPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
         <CheckCircle2 size={48} className="mb-4 text-green-500" />
-        <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
-          Request Submitted!
-        </h2>
+        <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">Request Submitted!</h2>
         <p className="mb-6 max-w-sm text-sm text-gray-500 dark:text-gray-400">
           Your reservation request for <strong>{form.room}</strong> has been submitted and is
           pending approval.

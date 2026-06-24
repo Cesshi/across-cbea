@@ -1,15 +1,14 @@
 'use client';
 
 import { PageBreadcrumb } from '@/components/common';
-import { useRooms } from '@/components/hooks/use-rooms';
 import {
   useAllConflicts,
   useApproveReservation,
   useRejectReservation,
   useReservationsByStatus,
 } from '@/components/hooks/use-reservations';
-import { Badge, Button } from '@/components/ui';
-import { format } from 'date-fns';
+import { useRooms } from '@/components/hooks/use-rooms';
+import { Badge } from '@/components/ui';
 import { AlertTriangle, BookOpen, Building2, Check, ClipboardList, Inbox, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -124,7 +123,9 @@ export default function DashboardPage() {
                     <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                       {r.subj} · {r.group} · {r.room}
                     </p>
-                    <p className="text-xs text-gray-400">{r.day} · {r.time_slot}</p>
+                    <p className="text-xs text-gray-400">
+                      {r.day} · {r.time_slot}
+                    </p>
                   </div>
                   <div className="flex shrink-0 gap-1.5">
                     <button
@@ -208,11 +209,26 @@ function StatCard({
   description?: string;
 }) {
   const styles: Record<string, { bg: string; iconBg: string }> = {
-    brand: { bg: 'bg-blue-100 dark:bg-blue-500/10', iconBg: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' },
-    success: { bg: 'bg-green-100 dark:bg-green-500/10', iconBg: 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400' },
-    warning: { bg: 'bg-amber-100 dark:bg-amber-500/10', iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400' },
-    info: { bg: 'bg-sky-100 dark:bg-sky-500/10', iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400' },
-    error: { bg: 'bg-red-100 dark:bg-red-500/10', iconBg: 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' },
+    brand: {
+      bg: 'bg-blue-100 dark:bg-blue-500/10',
+      iconBg: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+    },
+    success: {
+      bg: 'bg-green-100 dark:bg-green-500/10',
+      iconBg: 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400',
+    },
+    warning: {
+      bg: 'bg-amber-100 dark:bg-amber-500/10',
+      iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
+    },
+    info: {
+      bg: 'bg-sky-100 dark:bg-sky-500/10',
+      iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400',
+    },
+    error: {
+      bg: 'bg-red-100 dark:bg-red-500/10',
+      iconBg: 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400',
+    },
   };
 
   return (
@@ -222,12 +238,18 @@ function StatCard({
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{title}</p>
           <p className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{value}</p>
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${styles[color].iconBg}`}>
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${styles[color].iconBg}`}
+        >
           {icon}
         </div>
       </div>
-      {description && <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">{description}</div>}
-      <div className={`pointer-events-none absolute -right-4 -bottom-4 h-24 w-24 rounded-full blur-2xl ${styles[color].bg}`} />
+      {description && (
+        <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">{description}</div>
+      )}
+      <div
+        className={`pointer-events-none absolute -right-4 -bottom-4 h-24 w-24 rounded-full blur-2xl ${styles[color].bg}`}
+      />
     </div>
   );
 }
