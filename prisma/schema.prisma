@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  auth_id    String   @unique @db.Uuid
+  email      String   @unique
+  full_name  String   @default("")
+  role       String   @default("faculty")
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@map("profiles")
+}
+
+model Room {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @unique
+  type       String
+  capacity   Int      @default(0)
+  floor      String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@map("rooms")
+}
+
+model Reservation {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prof       String
+  subj       String
+  group      String
+  email      String?
+  room       String
+  day        String
+  time_slot  String
+  notes      String?
+  status     String    @default("pending")
+  action_at  DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([room, day, time_slot])
+  @@map("reservations")
+}

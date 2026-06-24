@@ -1,0 +1,53 @@
+import { Prisma } from '@prisma/client';
+import type { Session, User } from '@supabase/supabase-js';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+type UserProfileType = Prisma.ProfileGetPayload<Record<string, never>>;
+
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  userProfile: UserProfileType | null;
+  loading: boolean;
+  setUser: (user: User | null) => void;
+  setSession: (session: Session | null) => void;
+  setUserProfile: (profile: UserProfileType | null) => void;
+  setLoading: (loading: boolean) => void;
+  reset: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      session: null,
+      userProfile: null,
+      loading: true,
+
+      setUser(user: User | null) {
+        set({ user });
+      },
+
+      setSession(session: Session | null) {
+        set({ session });
+      },
+
+      setUserProfile(userProfile: UserProfileType | null) {
+        set({ userProfile });
+      },
+
+      setLoading(loading: boolean) {
+        set({ loading });
+      },
+
+      reset() {
+        set({ user: null, session: null, userProfile: null, loading: false });
+      },
+    }),
+    {
+      name: 'across-auth',
+      partialize: (state) => ({ userProfile: state.userProfile }),
+    }
+  )
+);
