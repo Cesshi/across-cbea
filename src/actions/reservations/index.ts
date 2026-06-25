@@ -145,7 +145,12 @@ export async function previewImport(rows: ImportRow[]): Promise<ImportPreviewRow
   const results: ImportPreviewRow[] = [];
 
   for (const row of rows) {
-    const { hasConflict, conflicting } = await detectConflict(row.room, row.day, row.start_time, row.end_time);
+    const { hasConflict, conflicting } = await detectConflict(
+      row.room,
+      row.day,
+      row.start_time,
+      row.end_time
+    );
     results.push({ ...row, hasConflict, conflicting });
   }
 
@@ -221,8 +226,10 @@ function parseTimeToMinutes(t: string): number {
 }
 
 function timeRangesOverlap(startA: string, endA: string, startB: string, endB: string): boolean {
-  return parseTimeToMinutes(startA) < parseTimeToMinutes(endB) &&
-    parseTimeToMinutes(endA) > parseTimeToMinutes(startB);
+  return (
+    parseTimeToMinutes(startA) < parseTimeToMinutes(endB) &&
+    parseTimeToMinutes(endA) > parseTimeToMinutes(startB)
+  );
 }
 
 /* ─── Conflict Detection ─── */
@@ -243,11 +250,20 @@ export async function detectConflict(
       status: 'approved',
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
-    select: { id: true, day: true, start_time: true, end_time: true, prof: true, course_code: true, section: true },
+    select: {
+      id: true,
+      day: true,
+      start_time: true,
+      end_time: true,
+      prof: true,
+      course_code: true,
+      section: true,
+    },
   });
 
   const conflict = existing.find(
-    (r) => daysOverlap(r.day, day) && timeRangesOverlap(r.start_time, r.end_time, start_time, end_time)
+    (r) =>
+      daysOverlap(r.day, day) && timeRangesOverlap(r.start_time, r.end_time, start_time, end_time)
   );
 
   if (conflict) {

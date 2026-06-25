@@ -66,13 +66,14 @@ export function useAllConflicts() {
 export function useDetectConflict(
   room: string,
   day: string,
-  time_slot: string,
+  start_time: string,
+  end_time: string,
   excludeId?: string
 ) {
   return useQuery({
-    queryKey: ['conflict-check', room, day, time_slot, excludeId],
-    queryFn: () => detectConflict(room, day, time_slot, excludeId),
-    enabled: !!(room && day && time_slot),
+    queryKey: ['conflict-check', room, day, start_time, end_time, excludeId],
+    queryFn: () => detectConflict(room, day, start_time, end_time, excludeId),
+    enabled: !!(room && day && start_time && end_time),
   });
 }
 
