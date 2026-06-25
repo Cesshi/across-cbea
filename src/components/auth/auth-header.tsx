@@ -10,10 +10,10 @@ interface AuthHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function AuthHeader({ children, maxWidth = 'md', className, ...props }: AuthHeaderProps) {
   const BG_IMAGES = [
-    '/upm-drrmh-background-1.jpg',
-    '/upm-drrmh-background-2.jpg',
-    '/upm-drrmh-background-3.jpg',
-    '/upm-drrmh-background-4.jpg',
+    '/cbea-background-1.png',
+    '/cbea-background-2.png',
+    '/cbea-background-3.png',
+    '/cbea-background-4.png',
   ];
   const track = [...BG_IMAGES, ...BG_IMAGES]; // doubled for seamless loop
   const [current, setCurrent] = useState(0);
