@@ -26,23 +26,67 @@ const REQUIRED_COLS = [
   'end_time',
 ];
 
+function normalizeHeader(h: string): string {
+  return String(h ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+// Maps raw column names from the real Excel file to ImportRow keys
+const HEADER_MAP: Record<string, string> = {
+  faculty: 'prof',
+  course: 'course',
+  year: 'year',
+  section: 'section',
+  'course code': 'course_code',
+  'course title': 'course_title',
+  lec: 'lec_units',
+  lab: 'lab_units',
+  time: 'time', // will be split into start_time / end_time
+  day: 'day',
+  'bldg & room': 'room',
+  email: 'email',
+  notes: 'notes',
+};
+
 function parseSheet(data: unknown[][]): ImportRow[] {
-  if (data.length < 2) return [];
-  const headers = (data[0] as string[]).map((h) =>
-    String(h ?? '')
-      .trim()
-      .toLowerCase()
-  );
-  return (data.slice(1) as unknown[][])
+  if (data.length < 3) return [];
+
+  // Row 0: main headers (Course, Year, Section, Course Code, Course Title, No. of Units, [blank], Time, Day, Bldg & Room, Faculty)
+  // Row 1: sub-headers for units (blank, blank, blank, blank, blank, Lec, Lab, ...)
+  // Row 2+: data
+
+  const mainHeaders = (data[0] as string[]).map(normalizeHeader);
+  const subHeaders = (data[1] as string[]).map(normalizeHeader);
+
+  // Build final header list: prefer subheader if it has content, else use main header
+  const headers = mainHeaders.map((h, i) => {
+    const sub = subHeaders[i];
+    // sub-row cells like 'lec' / 'lab' sit under 'no. of units' or blank
+    if (sub && sub !== '' && sub !== h) return sub;
+    return h;
+  });
+
+  // Map to ImportRow field names
+  const fieldNames = headers.map((h) => HEADER_MAP[h] ?? h);
+
+  return (data.slice(2) as unknown[][])
     .map((row) => {
       const obj: Record<string, string> = {};
-      headers.forEach((h, i) => {
-        obj[h] = String(row[i] ?? '').trim();
+      fieldNames.forEach((f, i) => {
+        obj[f] = String(row[i] ?? '').trim();
       });
+
+      // Split "08:00-11:00" into start_time / end_time
+      const timeParts = (obj['time'] ?? '').split('-');
+      const start_time = timeParts[0]?.trim() ?? '';
+      const end_time = timeParts[1]?.trim() ?? '';
+
       return {
         prof: obj['prof'] ?? '',
         course: obj['course'] ?? '',
-        year: obj['year'] ?? '',
+        year: String(obj['year'] ?? ''),
         section: obj['section'] ?? '',
         course_code: obj['course_code'] ?? '',
         course_title: obj['course_title'] ?? '',
@@ -51,8 +95,8 @@ function parseSheet(data: unknown[][]): ImportRow[] {
         email: obj['email'] || null,
         room: obj['room'] ?? '',
         day: obj['day'] ?? '',
-        start_time: obj['start_time'] ?? '',
-        end_time: obj['end_time'] ?? '',
+        start_time,
+        end_time,
         notes: obj['notes'] || null,
       };
     })
@@ -146,7 +190,8 @@ export default function ImportSchedulePage() {
                 Click to upload .xlsx or .csv
               </p>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Required columns: {REQUIRED_COLS.join(', ')}
+                Expected columns: Faculty, Course, Year, Section, Course Code, Course Title, Lec,
+                Lab, Time, Day, Bldg &amp; Room
               </p>
             </div>
             {previewMutation.isPending && (
