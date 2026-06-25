@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DAY_PATTERNS, RESERVATION_STATUSES, ROOM_TYPES } from './constants';
+import { DAY_PATTERNS, RESERVATION_STATUSES, ROOM_TYPES, YEAR_LEVELS } from './constants';
 
 /* ─── Auth ─── */
 export const signInSchema = z.object({
@@ -59,8 +59,13 @@ export const roomSchema = z.object({
 /* ─── Reservation ─── */
 export const reservationSchema = z.object({
   prof: z.string().min(1, 'Faculty name is required'),
-  subj: z.string().min(1, 'Course code is required'),
-  group: z.string().min(1, 'Group/section is required'),
+  course: z.string().min(1, 'Course/program is required'),
+  year: z.enum(YEAR_LEVELS, { required_error: 'Year level is required' }),
+  section: z.string().min(1, 'Section is required'),
+  course_code: z.string().min(1, 'Course code is required'),
+  course_title: z.string().min(1, 'Course title is required'),
+  lec_units: z.coerce.number().int().min(0).optional().nullable(),
+  lab_units: z.coerce.number().int().min(0).optional().nullable(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   room: z.string().min(1, 'Room is required'),
   day: z.enum(DAY_PATTERNS, { required_error: 'Day pattern is required' }),
@@ -72,7 +77,6 @@ export const reservationSchema = z.object({
 // Faculty submits a request — status locked to pending
 export const requestSchema = reservationSchema.omit({ status: true }).extend({
   status: z.literal('pending').default('pending'),
-  // "Change Existing Schedule" mode fields
   is_change_request: z.boolean().default(false),
   from_room: z.string().optional().nullable(),
   from_day: z.enum(DAY_PATTERNS).optional().nullable(),
