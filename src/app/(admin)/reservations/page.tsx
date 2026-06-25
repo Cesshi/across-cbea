@@ -71,46 +71,76 @@ export default function ReservationsPage() {
 
   const columns: ColumnDef<Reservation, unknown>[] = [
     {
-      accessorKey: 'prof',
-      header: 'Faculty',
-      cell: ({ row }) => (
-        <div>
-          <p className="font-medium text-gray-900 dark:text-white">{row.original.prof}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{row.original.email ?? ''}</p>
-        </div>
+      accessorKey: 'course',
+      header: 'Course',
+      cell: ({ getValue }) => (
+        <span className="text-sm font-medium text-gray-900 dark:text-white">
+          {String(getValue())}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'year',
+      header: 'Year',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-700 dark:text-gray-300">{String(getValue())}</span>
+      ),
+    },
+    {
+      accessorKey: 'section',
+      header: 'Section',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-700 dark:text-gray-300">{String(getValue())}</span>
       ),
     },
     {
       accessorKey: 'course_code',
-      header: 'Course',
-      cell: ({ row }) => (
-        <div>
-          <p className="font-medium text-gray-900 dark:text-white">{row.original.course_code}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{row.original.course_title}</p>
-        </div>
+      header: 'Course Code',
+      cell: ({ getValue }) => (
+        <span className="text-sm font-medium text-gray-900 dark:text-white">
+          {String(getValue())}
+        </span>
       ),
     },
     {
-      id: 'class',
-      header: 'Class',
-      cell: ({ row }) => (
-        <span className="text-sm text-gray-700 dark:text-gray-300">
-          {row.original.course} {row.original.year} – {row.original.section}
-        </span>
+      accessorKey: 'course_title',
+      header: 'Course Title',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-700 dark:text-gray-300">{String(getValue())}</span>
       ),
     },
     {
       id: 'units',
-      header: 'Units',
+      enableSorting: false,
+      header: () => (
+        <div>
+          <p>No. of Units</p>
+          <div className="mt-0.5 flex gap-6 text-[10px] font-normal text-gray-400">
+            <span>Lec</span>
+            <span>Lab</span>
+          </div>
+        </div>
+      ),
       cell: ({ row }) => (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {row.original.lec_units ?? '—'} Lec / {row.original.lab_units ?? '—'} Lab
+        <div className="flex gap-6 text-sm text-gray-600 dark:text-gray-400">
+          <span>{row.original.lec_units ?? '—'}</span>
+          <span>{row.original.lab_units ?? '—'}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'time',
+      header: 'Time',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+          {formatTime(row.original.start_time)} – {formatTime(row.original.end_time)}
         </span>
       ),
     },
     {
-      accessorKey: 'room',
-      header: 'Room',
+      accessorKey: 'day',
+      header: 'Day',
       cell: ({ getValue }) => (
         <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
           {String(getValue())}
@@ -118,13 +148,22 @@ export default function ReservationsPage() {
       ),
     },
     {
-      id: 'schedule',
-      header: 'Schedule',
-      cell: ({ row }) => (
-        <span className="text-xs text-gray-600 dark:text-gray-400">
-          {row.original.day} · {formatTime(row.original.start_time)} –{' '}
-          {formatTime(row.original.end_time)}
+      accessorKey: 'room',
+      header: 'Bldg & Room',
+      cell: ({ getValue }) => (
+        <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+          {String(getValue())}
         </span>
+      ),
+    },
+    {
+      accessorKey: 'prof',
+      header: 'Faculty',
+      cell: ({ row }) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white">{row.original.prof}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{row.original.email ?? ''}</p>
+        </div>
       ),
     },
     {
@@ -265,7 +304,7 @@ function ReservationModal({
           ? {
               prof: editItem.prof,
               course: editItem.course,
-              year: editItem.year as ReservationFormData['year'],
+              year: normalizeYear(editItem.year),
               section: editItem.section,
               course_code: editItem.course_code,
               course_title: editItem.course_title,
@@ -350,6 +389,17 @@ function ReservationModal({
   const roomOptions = rooms.map((r) => ({ value: r.name, label: `${r.name} (${r.type})` }));
   const dayOptions = DAY_PATTERNS.map((d) => ({ value: d, label: d }));
   const yearOptions = YEAR_LEVELS.map((y) => ({ value: y, label: y }));
+
+  const normalizeYear = (raw: string): ReservationFormData['year'] => {
+    const map: Record<string, ReservationFormData['year']> = {
+      '1': '1st Year',
+      '2': '2nd Year',
+      '3': '3rd Year',
+      '4': '4th Year',
+      '5': '5th Year',
+    };
+    return map[raw] ?? (raw as ReservationFormData['year']);
+  };
   const statusOptions = RESERVATION_STATUSES.map((s) => ({
     value: s,
     label: s.charAt(0).toUpperCase() + s.slice(1),

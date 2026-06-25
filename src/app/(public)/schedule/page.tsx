@@ -32,7 +32,12 @@ export default function SchedulePage() {
 
       {/* Content */}
       <div className="mx-auto max-w-screen-2xl px-4 py-6 md:px-6">
-        <ScheduleGrid reservations={reservations} rooms={rooms} isLoading={isPending} />
+        <ScheduleGrid
+          reservations={reservations}
+          rooms={rooms}
+          isLoading={isPending}
+          maxHeight="calc(100vh - 100px)"
+        />
       </div>
     </div>
   );
