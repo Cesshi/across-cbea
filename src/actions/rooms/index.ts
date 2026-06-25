@@ -1,17 +1,11 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { type Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 
-export type CreateRoomInput = {
-  name: string;
-  type: string;
-  capacity: number;
-  floor?: string | null;
-  is_active?: boolean;
-};
-
-export type UpdateRoomInput = Partial<CreateRoomInput>;
+export type CreateRoomInput = Omit<Prisma.RoomCreateInput, 'id' | 'created_at' | 'updated_at'>;
+export type UpdateRoomInput = Prisma.RoomUpdateInput;
 
 export async function getRooms(query?: string) {
   return prisma.room.findMany({

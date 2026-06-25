@@ -2,17 +2,19 @@
 
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { type Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 
-export type CreateProfileInput = {
-  email: string;
-  password: string;
-  full_name: string;
-  role: 'admin' | 'faculty';
-  is_active?: boolean;
-};
+// password lives in Supabase Auth, not in the DB — intersect it in for create only
+export type CreateProfileInput = Omit<
+  Prisma.ProfileCreateInput,
+  'id' | 'auth_id' | 'created_at' | 'updated_at'
+> & { password: string };
 
-export type UpdateProfileInput = Omit<Partial<CreateProfileInput>, 'password'>;
+export type UpdateProfileInput = Omit<
+  Prisma.ProfileUpdateInput,
+  'id' | 'auth_id' | 'created_at' | 'updated_at'
+>;
 
 export async function getProfiles(query?: string) {
   return prisma.profile.findMany({
