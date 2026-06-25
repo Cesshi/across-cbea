@@ -9,7 +9,6 @@ import {
   ClipboardList,
   Download,
   Eraser,
-  KeyRound,
   LayoutDashboard,
   Upload,
   Users,
@@ -66,7 +65,6 @@ const navItems: NavItem[] = [
     subItems: [
       { name: 'Import Schedule', path: '/tools/import', icon: <Upload size={14} /> },
       { name: 'Export Data', path: '/tools/export', icon: <Download size={14} /> },
-      { name: 'Change Password', path: '/tools/change-password', icon: <KeyRound size={14} /> },
       { name: 'Clear Data', path: '/tools/clear', icon: <Eraser size={14} /> },
     ],
   },
