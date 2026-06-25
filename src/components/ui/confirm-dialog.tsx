@@ -16,6 +16,7 @@ interface ConfirmDialogProps {
   isLoading?: boolean;
 }
 
+// TODO: make this to be dynamic also
 export function ConfirmDialog({
   isOpen,
   onClose,
@@ -100,6 +101,7 @@ export function ConfirmDialog({
             variant={variant === 'danger' ? 'danger' : 'primary'}
             onClick={onConfirm}
             isLoading={isLoading}
+            // TODO: make this dynamic
             loadingText="Deleting..."
           >
             {confirmLabel}

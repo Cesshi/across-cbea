@@ -1,8 +1,9 @@
 'use client';
 
 import { detectConflict } from '@/actions/reservations';
-import { PageBreadcrumb } from '@/components/common';
+import { PageBreadcrumb, TimeSlotPicker } from '@/components/common';
 import {
+  useApprovedReservations,
   useCreateReservation,
   useDeleteReservation,
   useReservations,
@@ -27,11 +28,12 @@ import {
   reservationSchema,
   type ReservationFormData,
 } from '@/lib';
+import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Reservation } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/react-table';
-import { AlertTriangle, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertTriangle, Clock, Info, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
@@ -39,6 +41,17 @@ const statusColor: Record<string, 'warning' | 'success' | 'error' | 'light'> = {
   pending: 'warning',
   approved: 'success',
   rejected: 'error',
+};
+
+const normalizeYear = (raw: string): ReservationFormData['year'] => {
+  const map: Record<string, ReservationFormData['year']> = {
+    '1': '1st Year',
+    '2': '2nd Year',
+    '3': '3rd Year',
+    '4': '4th Year',
+    '5': '5th Year',
+  };
+  return map[raw] ?? (raw as ReservationFormData['year']);
 };
 
 export default function ReservationsPage() {
@@ -259,6 +272,7 @@ function ReservationModal({
   editItem: Reservation | null;
 }) {
   const { data: rooms = [] } = useRooms();
+  const { data: allApproved = [] } = useApprovedReservations();
   const createMutation = useCreateReservation();
   const updateMutation = useUpdateReservation();
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -275,6 +289,7 @@ function ReservationModal({
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
@@ -342,28 +357,39 @@ function ReservationModal({
 
   const watchRoom = watch('room');
   const watchDay = watch('day');
-  const watchStartTime = watch('start_time');
-  const watchEndTime = watch('end_time');
+  const watchStart = watch('start_time');
+  const watchEnd = watch('end_time');
+
+  // Approved reservations for the selected room+day, excluding the item being edited
+  const roomDayReservations = useMemo(
+    () =>
+      watchRoom && watchDay
+        ? allApproved.filter(
+            (r) => r.room === watchRoom && r.day === watchDay && r.id !== editItem?.id
+          )
+        : [],
+    [allApproved, watchRoom, watchDay, editItem?.id]
+  );
+
+  const showPicker = !!(watchRoom && watchDay);
 
   useEffect(() => {
-    if (!watchRoom || !watchDay || !watchStartTime || !watchEndTime) {
+    if (!watchRoom || !watchDay || !watchStart || !watchEnd) {
       setConflict(null);
       return;
     }
     let cancelled = false;
     setCheckingConflict(true);
-    detectConflict(watchRoom, watchDay, watchStartTime, watchEndTime, editItem?.id).then(
-      (result) => {
-        if (!cancelled) {
-          setConflict(result.hasConflict ? (result.conflicting ?? null) : null);
-          setCheckingConflict(false);
-        }
+    detectConflict(watchRoom, watchDay, watchStart, watchEnd, editItem?.id).then((result) => {
+      if (!cancelled) {
+        setConflict(result.hasConflict ? (result.conflicting ?? null) : null);
+        setCheckingConflict(false);
       }
-    );
+    });
     return () => {
       cancelled = true;
     };
-  }, [watchRoom, watchDay, watchStartTime, watchEndTime, editItem?.id]);
+  }, [watchRoom, watchDay, watchStart, watchEnd, editItem?.id]);
 
   const onSubmit = async (data: ReservationFormData) => {
     if (conflict && data.status === 'approved') {
@@ -389,17 +415,6 @@ function ReservationModal({
   const roomOptions = rooms.map((r) => ({ value: r.name, label: `${r.name} (${r.type})` }));
   const dayOptions = DAY_PATTERNS.map((d) => ({ value: d, label: d }));
   const yearOptions = YEAR_LEVELS.map((y) => ({ value: y, label: y }));
-
-  const normalizeYear = (raw: string): ReservationFormData['year'] => {
-    const map: Record<string, ReservationFormData['year']> = {
-      '1': '1st Year',
-      '2': '2nd Year',
-      '3': '3rd Year',
-      '4': '4th Year',
-      '5': '5th Year',
-    };
-    return map[raw] ?? (raw as ReservationFormData['year']);
-  };
   const statusOptions = RESERVATION_STATUSES.map((s) => ({
     value: s,
     label: s.charAt(0).toUpperCase() + s.slice(1),
@@ -522,25 +537,77 @@ function ReservationModal({
           />
         </div>
 
-        {/* Start + End Time */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input
-            label="Start Time"
-            type="time"
-            required
-            error={!!errors.start_time}
-            hint={errors.start_time?.message}
-            {...register('start_time')}
-          />
-          <Input
-            label="End Time"
-            type="time"
-            required
-            error={!!errors.end_time}
-            hint={errors.end_time?.message}
-            {...register('end_time')}
-          />
-        </div>
+        {/* Time slot picker */}
+        {showPicker ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                Room Availability
+              </p>
+              {watchStart && watchEnd ? (
+                <div className="flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 dark:border-brand-500/30 dark:bg-brand-500/10">
+                  <Clock size={12} className="text-brand-500" />
+                  <span className="text-xs font-semibold text-brand-700 dark:text-brand-300">
+                    {formatTime(watchStart)} – {formatTime(watchEnd)}
+                  </span>
+                </div>
+              ) : (
+                <p className="flex items-center gap-1 text-xs text-gray-400">
+                  <Info size={12} />
+                  Click a free slot to begin
+                </p>
+              )}
+            </div>
+
+            <TimeSlotPicker
+              reservations={roomDayReservations}
+              selectedStart={watchStart ?? ''}
+              selectedEnd={watchEnd ?? ''}
+              onSelect={(start, end) => {
+                setValue('start_time', start, { shouldValidate: true });
+                setValue('end_time', end, { shouldValidate: true });
+              }}
+            />
+
+            {(errors.start_time || errors.end_time) && (
+              <p className="text-xs text-red-500">
+                {errors.start_time?.message ?? errors.end_time?.message}
+              </p>
+            )}
+
+            <details className="text-xs">
+              <summary className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                Enter time manually instead
+              </summary>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <Input
+                  label="Start Time"
+                  type="time"
+                  error={!!errors.start_time}
+                  {...register('start_time')}
+                />
+                <Input
+                  label="End Time"
+                  type="time"
+                  error={!!errors.end_time}
+                  {...register('end_time')}
+                />
+              </div>
+            </details>
+          </div>
+        ) : (
+          <div
+            className={cn(
+              'flex items-center gap-2 rounded-xl border border-dashed px-4 py-4 text-sm text-gray-400',
+              errors.start_time || errors.end_time
+                ? 'border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/5'
+                : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900'
+            )}
+          >
+            <Clock size={16} />
+            Select a room and day pattern above to choose a time slot.
+          </div>
+        )}
 
         {/* Conflict alert */}
         {checkingConflict && <p className="text-xs text-gray-400">Checking for conflicts...</p>}

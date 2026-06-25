@@ -1,13 +1,16 @@
 'use client';
 
-import { useCreateReservation } from '@/components/hooks/use-reservations';
+import { TimeSlotPicker } from '@/components/common';
+import { useApprovedReservations, useCreateReservation } from '@/components/hooks/use-reservations';
 import { useRooms } from '@/components/hooks/use-rooms';
-import { Input, Select, Textarea } from '@/components/ui';
+import { ConfirmDialog, Input, Select, Textarea } from '@/components/ui';
 import { requestSchema, type RequestFormData } from '@/lib';
-import { DAY_PATTERNS, RESTRICTED_ROOMS, YEAR_LEVELS } from '@/lib/constants';
+import { DAY_PATTERNS, RESTRICTED_ROOMS, YEAR_LEVELS, formatTime } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, ChevronRight } from 'lucide-react';
+import type { Reservation } from '@prisma/client';
+import { CheckCircle2, ChevronRight, Clock, Info, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -41,10 +44,15 @@ const DEFAULT_VALUES: RequestFormData = {
 export default function ReservationPage() {
   const { userProfile } = useAuthStore();
   const { data: rooms = [] } = useRooms();
+  const { data: allReservations = [] } = useApprovedReservations();
   const createMutation = useCreateReservation();
 
   const [step, setStep] = useState<Step>('form');
   const [mode, setMode] = useState<Mode>('new');
+
+  // Change mode: reservation the user clicked (awaiting confirm) and confirmed target
+  const [pendingChange, setPendingChange] = useState<Reservation | null>(null);
+  const [changeTarget, setChangeTarget] = useState<Reservation | null>(null);
 
   const {
     register,
@@ -63,6 +71,9 @@ export default function ReservationPage() {
   });
 
   const watchRoom = watch('room');
+  const watchDay = watch('day');
+  const watchStart = watch('start_time');
+  const watchEnd = watch('end_time');
 
   const availableRooms = useMemo(
     () =>
@@ -72,6 +83,17 @@ export default function ReservationPage() {
       ),
     [rooms]
   );
+
+  // Reservations for the currently selected room + day
+  const roomDayReservations = useMemo(
+    () =>
+      watchRoom && watchDay
+        ? allReservations.filter((r) => r.room === watchRoom && r.day === watchDay)
+        : [],
+    [allReservations, watchRoom, watchDay]
+  );
+
+  const showPicker = !!(watchRoom && watchDay);
 
   const onSubmit = async (data: RequestFormData) => {
     const changeNote =
@@ -107,12 +129,46 @@ export default function ReservationPage() {
   const handleModeChange = (m: Mode) => {
     setMode(m);
     setValue('is_change_request', m === 'change');
-    if (m === 'new') {
-      setValue('from_day', null);
-      setValue('from_start_time', null);
-      setValue('from_end_time', null);
-    }
+    setValue('from_room', null);
+    setValue('from_day', null);
+    setValue('from_start_time', null);
+    setValue('from_end_time', null);
+    setValue('start_time', '');
+    setValue('end_time', '');
+    setPendingChange(null);
+    setChangeTarget(null);
   };
+
+  function confirmChangeTarget() {
+    if (!pendingChange) return;
+    setChangeTarget(pendingChange);
+    // Populate class info from the selected reservation so user doesn't re-type it
+    setValue('course', pendingChange.course);
+    setValue('year', normalizeYear(pendingChange.year));
+    setValue('section', pendingChange.section);
+    setValue('course_code', pendingChange.course_code);
+    setValue('course_title', pendingChange.course_title);
+    setValue('lec_units', pendingChange.lec_units ?? '');
+    setValue('lab_units', pendingChange.lab_units ?? '');
+    setValue('from_room', pendingChange.room);
+    setValue('from_day', pendingChange.day as RequestFormData['from_day']);
+    setValue('from_start_time', pendingChange.start_time);
+    setValue('from_end_time', pendingChange.end_time);
+    setValue('start_time', '', { shouldValidate: false });
+    setValue('end_time', '', { shouldValidate: false });
+    setPendingChange(null);
+  }
+
+  function normalizeYear(raw: string): RequestFormData['year'] {
+    const map: Record<string, RequestFormData['year']> = {
+      '1': '1st Year',
+      '2': '2nd Year',
+      '3': '3rd Year',
+      '4': '4th Year',
+      '5': '5th Year',
+    };
+    return map[raw] ?? (raw as RequestFormData['year']);
+  }
 
   if (step === 'success') {
     return (
@@ -147,7 +203,6 @@ export default function ReservationPage() {
   }));
   const dayOptions = DAY_PATTERNS.map((d) => ({ value: d, label: d }));
   const yearOptions = YEAR_LEVELS.map((y) => ({ value: y, label: y }));
-  const fromDayOptions = DAY_PATTERNS.map((d) => ({ value: d, label: d }));
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -158,6 +213,24 @@ export default function ReservationPage() {
         </p>
       </div>
 
+      {/* Requesting as banner */}
+      <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 dark:border-brand-500/20 dark:bg-brand-500/5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-500/20">
+          <User size={16} className="text-brand-600 dark:text-brand-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wide text-brand-500 dark:text-brand-400">
+            Requesting as
+          </p>
+          <p className="truncate text-base font-semibold text-gray-900 dark:text-white">
+            {userProfile?.full_name ?? '—'}
+          </p>
+          {userProfile?.email && (
+            <p className="truncate text-sm text-gray-500 dark:text-gray-400">{userProfile.email}</p>
+          )}
+        </div>
+      </div>
+
       {/* Mode toggle */}
       <div className="mb-6 flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800">
         {(['new', 'change'] as Mode[]).map((m) => (
@@ -165,11 +238,12 @@ export default function ReservationPage() {
             key={m}
             type="button"
             onClick={() => handleModeChange(m)}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
+            className={cn(
+              'flex-1 rounded-lg py-2 text-sm font-medium transition',
               mode === m
                 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-            }`}
+            )}
           >
             {m === 'new' ? 'New Schedule' : 'Change Existing Schedule'}
           </button>
@@ -243,57 +317,17 @@ export default function ReservationPage() {
           />
         </div>
 
-        {/* Faculty info */}
+        {/* Room + Day */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input
-            label="Faculty Name"
+          <Select
+            label="Room"
             required
-            error={!!errors.prof}
-            hint={errors.prof?.message}
-            {...register('prof')}
+            placeholder="Select a room..."
+            options={roomOptions}
+            error={!!errors.room}
+            hint={errors.room?.message}
+            {...register('room')}
           />
-          <Input
-            label="Email (optional)"
-            type="email"
-            placeholder="your@email.com"
-            error={!!errors.email}
-            hint={errors.email?.message}
-            {...register('email')}
-          />
-        </div>
-
-        {/* Room */}
-        <Select
-          label="Room"
-          required
-          placeholder="Select a room..."
-          options={roomOptions}
-          error={!!errors.room}
-          hint={errors.room?.message}
-          {...register('room')}
-        />
-
-        {/* Change mode: FROM schedule */}
-        {mode === 'change' && (
-          <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-500/20 dark:bg-orange-500/5">
-            <p className="mb-3 text-xs font-semibold text-orange-700 dark:text-orange-400">
-              Current Schedule to Vacate
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <Select
-                label="Day Pattern"
-                placeholder="Select day..."
-                options={fromDayOptions}
-                {...register('from_day')}
-              />
-              <Input label="Start Time" type="time" {...register('from_start_time')} />
-              <Input label="End Time" type="time" {...register('from_end_time')} />
-            </div>
-          </div>
-        )}
-
-        {/* New schedule */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Select
             label={mode === 'change' ? 'New Day Pattern' : 'Day Pattern'}
             required
@@ -303,23 +337,132 @@ export default function ReservationPage() {
             hint={errors.day?.message}
             {...register('day')}
           />
-          <Input
-            label={mode === 'change' ? 'New Start Time' : 'Start Time'}
-            type="time"
-            required
-            error={!!errors.start_time}
-            hint={errors.start_time?.message}
-            {...register('start_time')}
-          />
-          <Input
-            label={mode === 'change' ? 'New End Time' : 'End Time'}
-            type="time"
-            required
-            error={!!errors.end_time}
-            hint={errors.end_time?.message}
-            {...register('end_time')}
-          />
         </div>
+
+        {/* Time slot picker — shown after room + day are selected */}
+        {showPicker ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-700 dark:text-gray-200">
+                  {mode === 'change' && !changeTarget
+                    ? 'Select a schedule to change'
+                    : mode === 'change' && changeTarget
+                      ? 'Pick your new time slot'
+                      : 'Room Availability'}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  {watchRoom} &mdash; {watchDay}
+                </p>
+              </div>
+              {watchStart && watchEnd ? (
+                <div className="flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 dark:border-brand-500/30 dark:bg-brand-500/10">
+                  <Clock size={12} className="text-brand-500" />
+                  <span className="text-xs font-semibold text-brand-700 dark:text-brand-300">
+                    {formatTime(watchStart)} – {formatTime(watchEnd)}
+                  </span>
+                </div>
+              ) : (
+                <p className="flex items-center gap-1 text-xs text-gray-400">
+                  <Info size={12} />
+                  {mode === 'change' && !changeTarget
+                    ? 'Click a reservation to change it'
+                    : 'Click a free slot to begin'}
+                </p>
+              )}
+            </div>
+
+            {/* Change target banner */}
+            {mode === 'change' && changeTarget && (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 dark:border-orange-500/20 dark:bg-orange-500/5">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-orange-400" />
+                  <span className="text-xs text-orange-700 dark:text-orange-300">
+                    Changing{' '}
+                    <strong>
+                      {changeTarget.course_code} — {formatTime(changeTarget.start_time)}–
+                      {formatTime(changeTarget.end_time)}
+                    </strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeTarget(null);
+                    setValue('from_room', null);
+                    setValue('from_day', null);
+                    setValue('from_start_time', null);
+                    setValue('from_end_time', null);
+                    setValue('start_time', '');
+                    setValue('end_time', '');
+                  }}
+                  className="text-[11px] text-orange-500 underline hover:text-orange-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            <TimeSlotPicker
+              reservations={roomDayReservations}
+              selectedStart={watchStart ?? ''}
+              selectedEnd={watchEnd ?? ''}
+              changeTarget={mode === 'change' ? changeTarget : null}
+              onOccupiedClick={mode === 'change' && !changeTarget ? setPendingChange : undefined}
+              onSelect={(start, end) => {
+                setValue('start_time', start, { shouldValidate: true });
+                setValue('end_time', end, { shouldValidate: true });
+              }}
+            />
+
+            {(errors.start_time || errors.end_time) && (
+              <p className="text-xs text-red-500">
+                {errors.start_time?.message ?? errors.end_time?.message}
+              </p>
+            )}
+
+            {/* Manual override */}
+            <details className="text-xs">
+              <summary className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                Enter time manually instead
+              </summary>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <Input
+                  label="Start Time"
+                  type="time"
+                  error={!!errors.start_time}
+                  {...register('start_time')}
+                />
+                <Input
+                  label="End Time"
+                  type="time"
+                  error={!!errors.end_time}
+                  {...register('end_time')}
+                />
+              </div>
+            </details>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-400 dark:border-gray-700 dark:bg-gray-900">
+            <Clock size={16} />
+            Select a room and day pattern above to choose your time slot.
+          </div>
+        )}
+
+        {/* Confirm change dialog */}
+        <ConfirmDialog
+          isOpen={!!pendingChange}
+          onClose={() => setPendingChange(null)}
+          onConfirm={confirmChangeTarget}
+          variant="primary"
+          title="Change this schedule?"
+          confirmLabel="Yes, change it"
+          message={
+            pendingChange
+              ? `${pendingChange.course_code} — ${formatTime(pendingChange.start_time)}–${formatTime(pendingChange.end_time)} · ${pendingChange.prof}`
+              : ''
+          }
+        />
 
         {/* Notes */}
         <Textarea
