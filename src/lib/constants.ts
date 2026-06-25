@@ -36,29 +36,6 @@ export const RESTRICTED_ROOMS = [
   'READING CENTER',
 ] as const;
 
-// 30-minute time slots from 7:00 AM to 9:00 PM
-export const TIME_SLOTS: string[] = (() => {
-  const slots: string[] = [];
-  for (let h = 7; h < 21; h++) {
-    for (const m of [0, 30]) {
-      const startH = h;
-      const startM = m;
-      const endM = m + 30;
-      const endH = endM === 60 ? h + 1 : h;
-      const endMin = endM === 60 ? 0 : endM;
-
-      const fmt = (hh: number, mm: number) => {
-        const period = hh < 12 ? 'AM' : 'PM';
-        const display = hh > 12 ? hh - 12 : hh === 0 ? 12 : hh;
-        return `${display}:${String(mm).padStart(2, '0')} ${period}`;
-      };
-
-      slots.push(`${fmt(startH, startM)} - ${fmt(endH, endMin)}`);
-    }
-  }
-  return slots;
-})();
-
 // Days that make up each day pattern (for schedule grid column mapping)
 export const DAY_PATTERN_MAP: Record<DayPattern, string[]> = {
   MWF: ['Monday', 'Wednesday', 'Friday'],
@@ -73,6 +50,22 @@ export const DAY_PATTERN_MAP: Record<DayPattern, string[]> = {
   TH: ['Thursday'],
   F: ['Friday'],
 };
+
+export const YEAR_LEVELS = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'] as const;
+
+// Converts "HH:MM" (24-hour, from type="time" inputs) to "H:MM AM/PM" for display.
+// Falls back to returning the input unchanged for legacy "7:00 AM" strings.
+export function formatTime(t: string): string {
+  const hhmm = t.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!hhmm) return t;
+  let h = parseInt(hhmm[1]);
+  const m = parseInt(hhmm[2]);
+  const period = h >= 12 ? 'PM' : 'AM';
+  if (h > 12) h -= 12;
+  if (h === 0) h = 12;
+  return `${h}:${m.toString().padStart(2, '0')} ${period}`;
+}
+export type YearLevel = (typeof YEAR_LEVELS)[number];
 
 export const SCHEDULE_DAYS = [
   'Monday',

@@ -64,12 +64,13 @@ export const reservationSchema = z.object({
   section: z.string().min(1, 'Section is required'),
   course_code: z.string().min(1, 'Course code is required'),
   course_title: z.string().min(1, 'Course title is required'),
-  lec_units: z.coerce.number().int().min(0).optional().nullable(),
-  lab_units: z.coerce.number().int().min(0).optional().nullable(),
+  lec_units: z.string().optional().nullable(),
+  lab_units: z.string().optional().nullable(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   room: z.string().min(1, 'Room is required'),
   day: z.enum(DAY_PATTERNS, { required_error: 'Day pattern is required' }),
-  time_slot: z.string().min(1, 'Time slot is required'),
+  start_time: z.string().min(1, 'Start time is required'),
+  end_time: z.string().min(1, 'End time is required'),
   notes: z.string().optional().nullable(),
   status: z.enum(RESERVATION_STATUSES).default('approved'),
 });
@@ -79,8 +80,9 @@ export const requestSchema = reservationSchema.omit({ status: true }).extend({
   status: z.literal('pending').default('pending'),
   is_change_request: z.boolean().default(false),
   from_room: z.string().optional().nullable(),
-  from_day: z.enum(DAY_PATTERNS).optional().nullable(),
-  from_time_slot: z.string().optional().nullable(),
+  from_day: z.preprocess((v) => (v === '' ? null : v), z.enum(DAY_PATTERNS).optional().nullable()),
+  from_start_time: z.string().optional().nullable(),
+  from_end_time: z.string().optional().nullable(),
 });
 
 /* ─── Inferred types ─── */

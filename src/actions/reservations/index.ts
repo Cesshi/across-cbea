@@ -16,7 +16,8 @@ export type UpdateReservationInput = Prisma.ReservationUpdateInput;
 export type ConflictResult = {
   room: string;
   day: string;
-  time_slot: string;
+  start_time: string;
+  end_time: string;
   existing: { prof: string; course_code: string; section: string };
   incoming: { prof: string; course_code: string; section: string };
 };
@@ -65,7 +66,7 @@ export async function getReservationsByStatus(status: string, query?: string) {
 export async function getApprovedReservations() {
   return prisma.reservation.findMany({
     where: { status: 'approved' },
-    orderBy: [{ room: 'asc' }, { day: 'asc' }, { time_slot: 'asc' }],
+    orderBy: [{ room: 'asc' }, { day: 'asc' }, { start_time: 'asc' }],
   });
 }
 
@@ -144,7 +145,7 @@ export async function previewImport(rows: ImportRow[]): Promise<ImportPreviewRow
   const results: ImportPreviewRow[] = [];
 
   for (const row of rows) {
-    const { hasConflict, conflicting } = await detectConflict(row.room, row.day, row.time_slot);
+    const { hasConflict, conflicting } = await detectConflict(row.room, row.day, row.start_time, row.end_time);
     results.push({ ...row, hasConflict, conflicting });
   }
 
@@ -162,7 +163,7 @@ export async function batchImport(
   let skipped = 0;
 
   for (const row of rows) {
-    const { hasConflict } = await detectConflict(row.room, row.day, row.time_slot);
+    const { hasConflict } = await detectConflict(row.room, row.day, row.start_time, row.end_time);
     if (hasConflict) {
       skipped++;
       continue;
@@ -191,40 +192,46 @@ export async function clearAllReservations(): Promise<{ count: number }> {
 
 /* ─── Helpers ─── */
 
-/**
- * Expand a day pattern (e.g. "MWF") into individual day names.
- * Falls back to the raw value if not in the map.
- */
 function expandDays(day: string): string[] {
   return DAY_PATTERN_MAP[day as DayPattern] ?? [day];
 }
 
-/**
- * Check if two day patterns share at least one overlapping day.
- */
 function daysOverlap(dayA: string, dayB: string): boolean {
   const a = expandDays(dayA);
   const b = expandDays(dayB);
   return a.some((d) => b.includes(d));
 }
 
-/**
- * Returns true when two time slots conflict (exact match — 30-min slots don't partially overlap).
- */
-function timeSlotsConflict(slotA: string, slotB: string): boolean {
-  return slotA.trim() === slotB.trim();
+function parseTimeToMinutes(t: string): number {
+  const trimmed = t.trim();
+  // HH:MM (24-hour) — from type="time" inputs
+  const hhmm = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (hhmm) return parseInt(hhmm[1]) * 60 + parseInt(hhmm[2]);
+  // H:MM AM/PM (12-hour) — legacy format
+  const ampm = trimmed.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+  if (ampm) {
+    let h = parseInt(ampm[1]);
+    const m = parseInt(ampm[2]);
+    const period = ampm[3].toUpperCase();
+    if (period === 'PM' && h !== 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  }
+  return 0;
+}
+
+function timeRangesOverlap(startA: string, endA: string, startB: string, endB: string): boolean {
+  return parseTimeToMinutes(startA) < parseTimeToMinutes(endB) &&
+    parseTimeToMinutes(endA) > parseTimeToMinutes(startB);
 }
 
 /* ─── Conflict Detection ─── */
 
-/**
- * Find existing approved reservations that conflict with the given booking.
- * Excludes a reservation by ID when checking edits (excludeId).
- */
 export async function detectConflict(
   room: string,
   day: string,
-  time_slot: string,
+  start_time: string,
+  end_time: string,
   excludeId?: string
 ): Promise<{
   hasConflict: boolean;
@@ -236,11 +243,11 @@ export async function detectConflict(
       status: 'approved',
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
-    select: { id: true, day: true, time_slot: true, prof: true, course_code: true, section: true },
+    select: { id: true, day: true, start_time: true, end_time: true, prof: true, course_code: true, section: true },
   });
 
   const conflict = existing.find(
-    (r) => daysOverlap(r.day, day) && timeSlotsConflict(r.time_slot, time_slot)
+    (r) => daysOverlap(r.day, day) && timeRangesOverlap(r.start_time, r.end_time, start_time, end_time)
   );
 
   if (conflict) {
@@ -257,10 +264,6 @@ export async function detectConflict(
   return { hasConflict: false };
 }
 
-/**
- * Detect all double-booking conflicts among currently approved reservations.
- * Used for the admin dashboard conflicts table.
- */
 export async function detectAllConflicts(): Promise<ConflictResult[]> {
   const approved = await prisma.reservation.findMany({
     where: { status: 'approved' },
@@ -268,7 +271,8 @@ export async function detectAllConflicts(): Promise<ConflictResult[]> {
       id: true,
       room: true,
       day: true,
-      time_slot: true,
+      start_time: true,
+      end_time: true,
       prof: true,
       course_code: true,
       section: true,
@@ -286,7 +290,7 @@ export async function detectAllConflicts(): Promise<ConflictResult[]> {
       if (
         a.room === b.room &&
         daysOverlap(a.day, b.day) &&
-        timeSlotsConflict(a.time_slot, b.time_slot)
+        timeRangesOverlap(a.start_time, a.end_time, b.start_time, b.end_time)
       ) {
         const key = [a.id, b.id].sort().join('-');
         if (!seen.has(key)) {
@@ -294,7 +298,8 @@ export async function detectAllConflicts(): Promise<ConflictResult[]> {
           conflicts.push({
             room: a.room,
             day: a.day,
-            time_slot: a.time_slot,
+            start_time: a.start_time,
+            end_time: a.end_time,
             existing: { prof: a.prof, course_code: a.course_code, section: a.section },
             incoming: { prof: b.prof, course_code: b.course_code, section: b.section },
           });

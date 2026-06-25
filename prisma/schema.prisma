@@ -40,7 +40,6 @@ model Reservation {
   email        String?
   room         String
   day          String
-  time_slot    String
   notes        String?
   status       String    @default("pending")
   action_at    DateTime? @db.Timestamptz(6)
@@ -48,9 +47,11 @@ model Reservation {
   course       String    @default("")
   year         String    @default("")
   course_title String    @default("")
-  lec_units    Int?
-  lab_units    Int?
+  lec_units    String?
+  lab_units    String?
+  start_time   String
+  end_time     String
 
-  @@index([room, day, time_slot])
+  @@index([room, day, start_time])
   @@map("reservations")
 }
