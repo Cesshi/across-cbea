@@ -8,26 +8,13 @@ import {
   useReservations,
 } from '@/components/hooks/use-reservations';
 import { Badge, Button, ConfirmDialog, DataTable, Input, Modal } from '@/components/ui';
+import { formatTime } from '@/lib/constants';
+import type { Reservation } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { Check, FileText, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-
-type Reservation = {
-  id: string;
-  prof: string;
-  subj: string;
-  group: string;
-  email: string | null;
-  room: string;
-  day: string;
-  time_slot: string;
-  notes: string | null;
-  status: string;
-  action_at: Date | null;
-  created_at: Date;
-};
 
 const STATUS_TABS = ['All', 'Pending', 'Approved', 'Rejected'] as const;
 type StatusTab = (typeof STATUS_TABS)[number];
@@ -96,8 +83,25 @@ export default function RequestsPage() {
         <span className="font-medium text-gray-900 dark:text-white">{String(getValue())}</span>
       ),
     },
-    { accessorKey: 'subj', header: 'Subject' },
-    { accessorKey: 'group', header: 'Group' },
+    {
+      accessorKey: 'course_code',
+      header: 'Course',
+      cell: ({ row }) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white">{row.original.course_code}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{row.original.course_title}</p>
+        </div>
+      ),
+    },
+    {
+      id: 'class',
+      header: 'Class',
+      cell: ({ row }) => (
+        <span className="text-sm text-gray-700 dark:text-gray-300">
+          {row.original.course} {row.original.year} – {row.original.section}
+        </span>
+      ),
+    },
     {
       accessorKey: 'room',
       header: 'Room',
@@ -107,8 +111,16 @@ export default function RequestsPage() {
         </span>
       ),
     },
-    { accessorKey: 'day', header: 'Day' },
-    { accessorKey: 'time_slot', header: 'Time Slot' },
+    {
+      id: 'schedule',
+      header: 'Schedule',
+      cell: ({ row }) => (
+        <span className="text-xs text-gray-600 dark:text-gray-400">
+          {row.original.day} · {formatTime(row.original.start_time)} –{' '}
+          {formatTime(row.original.end_time)}
+        </span>
+      ),
+    },
     {
       accessorKey: 'status',
       header: 'Status',
@@ -183,7 +195,6 @@ export default function RequestsPage() {
       <div className="space-y-6">
         <PageBreadcrumb pageTitle="Requests" />
 
-        {/* Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800">
             {STATUS_TABS.map((tab) => (
@@ -216,7 +227,7 @@ export default function RequestsPage() {
               className="absolute top-1/2 left-3 z-1 -translate-y-1/2 text-gray-400"
             />
             <Input
-              placeholder="Search by faculty, subject, room..."
+              placeholder="Search by faculty, course code, room..."
               className="pl-9"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -233,7 +244,6 @@ export default function RequestsPage() {
         />
       </div>
 
-      {/* Notes Modal */}
       <Modal
         isOpen={notesModal.open}
         onClose={() => setNotesModal({ open: false, notes: '', prof: '' })}

@@ -1,14 +1,16 @@
 'use client';
 
 import { PageBreadcrumb } from '@/components/common';
+import { useApprovedReservations, useReservations } from '@/components/hooks/use-reservations';
 import { useRooms } from '@/components/hooks/use-rooms';
-import { useReservations, useApprovedReservations } from '@/components/hooks/use-reservations';
-import { SCHEDULE_DAYS, TIME_SLOTS, DAY_PATTERN_MAP, type DayPattern } from '@/lib/constants';
+import { DAY_PATTERN_MAP, SCHEDULE_DAYS, type DayPattern } from '@/lib/constants';
 import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 function downloadCsv(filename: string, rows: string[][]) {
-  const csv = rows.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const csv = rows
+    .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -25,21 +27,50 @@ export default function ExportDataPage() {
 
   const exportRoomsCsv = () => {
     const header = ['Name', 'Type', 'Capacity', 'Floor', 'Status'];
-    const rows = rooms.map((r) => [r.name, r.type, String(r.capacity), r.floor ?? '', r.is_active ? 'Active' : 'Inactive']);
+    const rows = rooms.map((r) => [
+      r.name,
+      r.type,
+      String(r.capacity),
+      r.floor ?? '',
+      r.is_active ? 'Active' : 'Inactive',
+    ]);
     downloadCsv('rooms.csv', [header, ...rows]);
     toast.success('Rooms exported');
   };
 
   const exportReservationsCsv = () => {
-    const header = ['Prof', 'Subject', 'Group', 'Email', 'Room', 'Day', 'Time Slot', 'Status', 'Notes', 'Created At'];
+    const header = [
+      'Faculty',
+      'Course',
+      'Year',
+      'Section',
+      'Course Code',
+      'Course Title',
+      'Lec Units',
+      'Lab Units',
+      'Email',
+      'Room',
+      'Day',
+      'Start Time',
+      'End Time',
+      'Status',
+      'Notes',
+      'Created At',
+    ];
     const rows = allReservations.map((r) => [
       r.prof,
-      r.subj,
-      r.group,
+      r.course,
+      r.year,
+      r.section,
+      r.course_code,
+      r.course_title,
+      r.lec_units ?? '',
+      r.lab_units ?? '',
       r.email ?? '',
       r.room,
       r.day,
-      r.time_slot,
+      r.start_time,
+      r.end_time,
       r.status,
       r.notes ?? '',
       new Date(r.created_at).toLocaleString(),
@@ -58,19 +89,44 @@ export default function ExportDataPage() {
       const roomNames = [...new Set(approvedReservations.map((r) => r.room))].sort();
 
       for (const roomName of roomNames) {
-        const data: string[][] = [['Time', ...SCHEDULE_DAYS]];
+        const data: string[][] = [
+          [
+            'Day',
+            'Start Time',
+            'End Time',
+            'Course Code',
+            'Course Title',
+            'Faculty',
+            'Class',
+            'Lec',
+            'Lab',
+          ],
+        ];
 
-        for (const slot of TIME_SLOTS) {
-          const row = [slot];
-          for (const day of SCHEDULE_DAYS) {
-            const entry = approvedReservations.find((r) => {
-              if (r.room !== roomName) return false;
-              const days = DAY_PATTERN_MAP[r.day as DayPattern] ?? [r.day];
-              return days.includes(day) && r.time_slot === slot;
-            });
-            row.push(entry ? `${entry.subj} - ${entry.prof} (${entry.group})` : '');
-          }
-          data.push(row);
+        const roomEntries = approvedReservations
+          .filter((r) => r.room === roomName)
+          .flatMap((r) => {
+            const days = DAY_PATTERN_MAP[r.day as DayPattern] ?? [r.day];
+            return days.map((day) => ({ ...r, _day: day }));
+          })
+          .sort((a, b) => {
+            const di = SCHEDULE_DAYS.indexOf(a._day as (typeof SCHEDULE_DAYS)[number]);
+            const dj = SCHEDULE_DAYS.indexOf(b._day as (typeof SCHEDULE_DAYS)[number]);
+            return di !== dj ? di - dj : a.start_time.localeCompare(b.start_time);
+          });
+
+        for (const e of roomEntries) {
+          data.push([
+            e._day,
+            e.start_time,
+            e.end_time,
+            e.course_code,
+            e.course_title,
+            e.prof,
+            `${e.course} ${e.year}-${e.section}`,
+            e.lec_units ?? '',
+            e.lab_units ?? '',
+          ]);
         }
 
         const ws = utils.aoa_to_sheet(data);

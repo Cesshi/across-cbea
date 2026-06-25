@@ -39,7 +39,7 @@ export default function VacantRoomsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-4 md:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6">
           <div>
             <h1 className="text-lg font-bold text-gray-900 dark:text-white">Vacant Rooms</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -65,13 +65,10 @@ export default function VacantRoomsPage() {
       </header>
 
       {/* Filters */}
-      <div className="mx-auto max-w-screen-xl px-4 pt-6 pb-4 md:px-6">
+      <div className="mx-auto max-w-7xl px-4 pt-6 pb-4 md:px-6">
         <div className="flex flex-wrap gap-3">
           <div className="relative min-w-48 flex-1">
-            <Search
-              size={15}
-              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
-            />
+            <Search size={15} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search room name..."
@@ -114,7 +111,7 @@ export default function VacantRoomsPage() {
       </div>
 
       {/* Room Grid */}
-      <div className="mx-auto max-w-screen-xl px-4 pb-10 md:px-6">
+      <div className="mx-auto max-w-7xl px-4 pb-10 md:px-6">
         {roomsPending ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />

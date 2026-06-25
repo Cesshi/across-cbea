@@ -9,22 +9,12 @@ import {
 } from '@/components/hooks/use-reservations';
 import { useRooms } from '@/components/hooks/use-rooms';
 import { Badge } from '@/components/ui';
+import { formatTime } from '@/lib/constants';
+import type { Reservation } from '@prisma/client';
 import { AlertTriangle, BookOpen, Building2, Check, ClipboardList, Inbox, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type Reservation = {
-  id: string;
-  prof: string;
-  subj: string;
-  group: string;
-  room: string;
-  day: string;
-  time_slot: string;
-  notes: string | null;
-  status: string;
-  created_at: Date;
-};
-
+// TODO: also render here the schedule component
 export default function DashboardPage() {
   const { data: rooms = [] } = useRooms();
   const { data: approved = [] } = useReservationsByStatus('approved');
@@ -121,10 +111,10 @@ export default function DashboardPage() {
                       {r.prof}
                     </p>
                     <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                      {r.subj} · {r.group} · {r.room}
+                      {r.course_code} · {r.course} {r.year}-{r.section} · {r.room}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {r.day} · {r.time_slot}
+                      {r.day} · {formatTime(r.start_time)}–{formatTime(r.end_time)}
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-1.5">
@@ -179,11 +169,12 @@ export default function DashboardPage() {
                   <div className="mb-1 flex items-center gap-1.5">
                     <AlertTriangle size={12} className="text-red-500" />
                     <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                      {c.room} · {c.day} · {c.time_slot}
+                      {c.room} · {c.day} · {formatTime(c.start_time)}–{formatTime(c.end_time)}
                     </span>
                   </div>
                   <p className="text-xs text-red-500 dark:text-red-400">
-                    {c.existing.prof} ({c.existing.subj}) vs {c.incoming.prof} ({c.incoming.subj})
+                    {c.existing.prof} ({c.existing.course_code}) vs {c.incoming.prof} (
+                    {c.incoming.course_code})
                   </p>
                 </div>
               ))}

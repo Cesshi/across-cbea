@@ -1,36 +1,62 @@
 'use client';
 
+import type { ImportRow } from '@/actions/reservations';
 import { PageBreadcrumb } from '@/components/common';
 import { useBatchImport, usePreviewImport } from '@/components/hooks/use-reservations';
-import type { ImportRow } from '@/actions/reservations';
 import { AlertTriangle, CheckCircle2, FileUp, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 type Step = 'upload' | 'preview' | 'done';
-type PreviewRow = ImportRow & { hasConflict: boolean; conflicting?: { prof: string; subj: string; group: string } };
+type PreviewRow = ImportRow & {
+  hasConflict: boolean;
+  conflicting?: { prof: string; course_code: string; section: string };
+};
 
-const REQUIRED_COLS = ['prof', 'subj', 'group', 'room', 'day', 'time_slot'];
+const REQUIRED_COLS = [
+  'prof',
+  'course',
+  'year',
+  'section',
+  'course_code',
+  'course_title',
+  'room',
+  'day',
+  'start_time',
+  'end_time',
+];
 
 function parseSheet(data: unknown[][]): ImportRow[] {
   if (data.length < 2) return [];
-  const headers = (data[0] as string[]).map((h) => String(h ?? '').trim().toLowerCase());
-  return (data.slice(1) as unknown[][]).map((row) => {
-    const obj: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      obj[h] = String(row[i] ?? '').trim();
-    });
-    return {
-      prof: obj['prof'] ?? '',
-      subj: obj['subj'] ?? '',
-      group: obj['group'] ?? '',
-      email: obj['email'] || null,
-      room: obj['room'] ?? '',
-      day: obj['day'] ?? '',
-      time_slot: obj['time_slot'] ?? '',
-      notes: obj['notes'] || null,
-    };
-  }).filter((r) => REQUIRED_COLS.every((k) => r[k as keyof ImportRow]));
+  const headers = (data[0] as string[]).map((h) =>
+    String(h ?? '')
+      .trim()
+      .toLowerCase()
+  );
+  return (data.slice(1) as unknown[][])
+    .map((row) => {
+      const obj: Record<string, string> = {};
+      headers.forEach((h, i) => {
+        obj[h] = String(row[i] ?? '').trim();
+      });
+      return {
+        prof: obj['prof'] ?? '',
+        course: obj['course'] ?? '',
+        year: obj['year'] ?? '',
+        section: obj['section'] ?? '',
+        course_code: obj['course_code'] ?? '',
+        course_title: obj['course_title'] ?? '',
+        lec_units: obj['lec_units'] || null,
+        lab_units: obj['lab_units'] || null,
+        email: obj['email'] || null,
+        room: obj['room'] ?? '',
+        day: obj['day'] ?? '',
+        start_time: obj['start_time'] ?? '',
+        end_time: obj['end_time'] ?? '',
+        notes: obj['notes'] || null,
+      };
+    })
+    .filter((r) => REQUIRED_COLS.every((k) => r[k as keyof ImportRow]));
 }
 
 export default function ImportSchedulePage() {
@@ -183,12 +209,14 @@ export default function ImportSchedulePage() {
               <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-gray-800">
                 <tr>
                   <th className="px-3 py-2 text-left font-semibold text-gray-500">Status</th>
-                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Prof</th>
-                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Subject</th>
-                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Group</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Faculty</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Course Code</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Course Title</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Class</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-500">Room</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-500">Day</th>
-                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Time Slot</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-500">Start Time</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-500">End Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,9 +224,7 @@ export default function ImportSchedulePage() {
                   <tr
                     key={i}
                     className={`border-b last:border-0 ${
-                      r.hasConflict
-                        ? 'bg-red-50 dark:bg-red-500/5'
-                        : 'bg-white dark:bg-gray-900'
+                      r.hasConflict ? 'bg-red-50 dark:bg-red-500/5' : 'bg-white dark:bg-gray-900'
                     }`}
                   >
                     <td className="px-3 py-2">
@@ -215,11 +241,15 @@ export default function ImportSchedulePage() {
                       )}
                     </td>
                     <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.prof}</td>
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.subj}</td>
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.group}</td>
+                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.course_code}</td>
+                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.course_title}</td>
+                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">
+                      {r.course} {r.year}-{r.section}
+                    </td>
                     <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.room}</td>
                     <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.day}</td>
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.time_slot}</td>
+                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.start_time}</td>
+                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.end_time}</td>
                   </tr>
                 ))}
               </tbody>
@@ -237,7 +267,10 @@ export default function ImportSchedulePage() {
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               <span className="font-semibold text-green-600">{result.inserted} inserted</span>
               {result.skipped > 0 && (
-                <> · <span className="font-semibold text-amber-500">{result.skipped} skipped</span></>
+                <>
+                  {' '}
+                  · <span className="font-semibold text-amber-500">{result.skipped} skipped</span>
+                </>
               )}
             </p>
           </div>

@@ -16,6 +16,7 @@ import {
   type ProfileFormData,
 } from '@/lib';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { Profile } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { Pencil, Plus, PowerOff, Search, Trash2 } from 'lucide-react';
@@ -23,157 +24,10 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
-type Profile = {
-  id: string;
-  auth_id: string;
-  email: string;
-  full_name: string;
-  role: string;
-  is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
-};
-
 const ROLE_OPTIONS = [
   { value: 'faculty', label: 'Faculty' },
   { value: 'admin', label: 'Admin' },
 ];
-
-/* ─── User Modal ─── */
-function UserModal({
-  isOpen,
-  onClose,
-  editUser,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  editUser: Profile | null;
-}) {
-  const createMutation = useCreateProfile();
-  const updateMutation = useUpdateProfile();
-  const isPending = createMutation.isPending || updateMutation.isPending;
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CreateUserFormData | ProfileFormData>({
-    resolver: zodResolver(editUser ? profileSchema : createUserSchema),
-    defaultValues: {
-      full_name: '',
-      email: '',
-      password: '',
-      role: 'faculty',
-      is_active: true,
-    },
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      reset(
-        editUser
-          ? {
-              full_name: editUser.full_name,
-              email: editUser.email,
-              role: editUser.role as 'admin' | 'faculty',
-              is_active: editUser.is_active,
-            }
-          : { full_name: '', email: '', password: '', role: 'faculty', is_active: true }
-      );
-    }
-  }, [isOpen, editUser, reset]);
-
-  const onSubmit = async (data: CreateUserFormData | ProfileFormData) => {
-    try {
-      if (editUser) {
-        await updateMutation.mutateAsync({ id: editUser.id, data: data as ProfileFormData });
-        toast.success('User updated');
-      } else {
-        await createMutation.mutateAsync(data as CreateUserFormData);
-        toast.success('User created');
-      }
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Something went wrong');
-    }
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} className="sm:max-w-md">
-      <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
-        {editUser ? 'Edit User' : 'Add User'}
-      </h2>
-      <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-        {editUser ? 'Update user details.' : 'Create a new user account.'}
-      </p>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="Full Name"
-          required
-          placeholder="e.g. Juan Dela Cruz"
-          error={!!errors.full_name}
-          hint={errors.full_name?.message}
-          {...register('full_name')}
-        />
-
-        <Input
-          label="Email"
-          type="email"
-          required
-          placeholder="user@mmsu.edu.ph"
-          disabled={!!editUser}
-          error={!!errors.email}
-          hint={errors.email?.message}
-          {...register('email')}
-        />
-
-        {!editUser && (
-          <Input
-            label="Password"
-            type="password"
-            required
-            placeholder="Min. 8 characters"
-            error={!!(errors as { password?: { message?: string } }).password}
-            hint={(errors as { password?: { message?: string } }).password?.message}
-            {...register('password')}
-          />
-        )}
-
-        <Select
-          label="Role"
-          required
-          options={ROLE_OPTIONS}
-          error={!!errors.role}
-          hint={errors.role?.message}
-          {...register('role')}
-        />
-
-        <div className="flex items-center gap-3 pt-1">
-          <input
-            id="is_active_user"
-            type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
-            {...register('is_active')}
-          />
-          <label htmlFor="is_active_user" className="text-sm text-gray-700 dark:text-gray-300">
-            Active account
-          </label>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button type="submit" isLoading={isPending} loadingText="Saving...">
-            {editUser ? 'Update' : 'Create User'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
 
 /* ─── Page ─── */
 export default function UsersPage() {
@@ -361,5 +215,141 @@ export default function UsersPage() {
         isLoading={deleteMutation.isPending}
       />
     </>
+  );
+}
+
+/* ─── User Modal ─── */
+function UserModal({
+  isOpen,
+  onClose,
+  editUser,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  editUser: Profile | null;
+}) {
+  const createMutation = useCreateProfile();
+  const updateMutation = useUpdateProfile();
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateUserFormData | ProfileFormData>({
+    resolver: zodResolver(editUser ? profileSchema : createUserSchema),
+    defaultValues: {
+      full_name: '',
+      email: '',
+      password: '',
+      role: 'faculty',
+      is_active: true,
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      reset(
+        editUser
+          ? {
+              full_name: editUser.full_name,
+              email: editUser.email,
+              role: editUser.role as 'admin' | 'faculty',
+              is_active: editUser.is_active,
+            }
+          : { full_name: '', email: '', password: '', role: 'faculty', is_active: true }
+      );
+    }
+  }, [isOpen, editUser, reset]);
+
+  const onSubmit = async (data: CreateUserFormData | ProfileFormData) => {
+    try {
+      if (editUser) {
+        await updateMutation.mutateAsync({ id: editUser.id, data: data as ProfileFormData });
+        toast.success('User updated');
+      } else {
+        await createMutation.mutateAsync(data as CreateUserFormData);
+        toast.success('User created');
+      }
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong');
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="sm:max-w-md">
+      <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+        {editUser ? 'Edit User' : 'Add User'}
+      </h2>
+      <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+        {editUser ? 'Update user details.' : 'Create a new user account.'}
+      </p>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Input
+          label="Full Name"
+          required
+          placeholder="e.g. Juan Dela Cruz"
+          error={!!errors.full_name}
+          hint={errors.full_name?.message}
+          {...register('full_name')}
+        />
+
+        <Input
+          label="Email"
+          type="email"
+          required
+          placeholder="user@mmsu.edu.ph"
+          disabled={!!editUser}
+          error={!!errors.email}
+          hint={errors.email?.message}
+          {...register('email')}
+        />
+
+        {!editUser && (
+          <Input
+            label="Password"
+            type="password"
+            required
+            placeholder="Min. 8 characters"
+            error={!!(errors as { password?: { message?: string } }).password}
+            hint={(errors as { password?: { message?: string } }).password?.message}
+            {...register('password')}
+          />
+        )}
+
+        <Select
+          label="Role"
+          required
+          options={ROLE_OPTIONS}
+          error={!!errors.role}
+          hint={errors.role?.message}
+          {...register('role')}
+        />
+
+        <div className="flex items-center gap-3 pt-1">
+          <input
+            id="is_active_user"
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+            {...register('is_active')}
+          />
+          <label htmlFor="is_active_user" className="text-sm text-gray-700 dark:text-gray-300">
+            Active account
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button type="submit" isLoading={isPending} loadingText="Saving...">
+            {editUser ? 'Update' : 'Create User'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
