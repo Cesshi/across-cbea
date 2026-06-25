@@ -1,6 +1,5 @@
 'use client';
 
-import { GoogleSignInForm } from '@/components/auth';
 import { Button, Input, Label } from '@/components/ui';
 import { SignInFormData, signInSchema, supabase } from '@/lib';
 import { useAuthStore } from '@/store';
@@ -61,20 +60,10 @@ export function SignInForm() {
     <div className="w-full max-w-md space-y-5">
       {/* Title */}
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Welcome</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Sign In</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          ERT Members sign in with Google · Admins use email and password
+          Enter your credentials to access the app
         </p>
-      </div>
-
-      {/* Google sign-in */}
-      <GoogleSignInForm />
-
-      {/* Divider */}
-      <div className="relative flex items-center gap-3">
-        <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-        <span className="text-xs text-gray-400">or sign in with email</span>
-        <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
       </div>
 
       {/* Email / password form */}
