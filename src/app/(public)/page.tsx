@@ -1,6 +1,7 @@
 'use client';
 
-import { CalendarDays, Building2, ClipboardList, Users } from 'lucide-react';
+import { Building2, CalendarDays, ClipboardList, Users } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const features = [
@@ -31,7 +32,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Nav */}
       <nav className="fixed top-0 right-0 left-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-950/80">
-        <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3 md:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-2">
             <CalendarDays size={20} className="text-brand-500" />
             <span className="text-sm font-bold text-gray-900 dark:text-white">ACROSS CBEA</span>
@@ -55,6 +56,24 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-3">
+          <Image
+            src="/mmsu-logo.png"
+            alt="MMSU Logo"
+            width={72}
+            height={72}
+            sizes="72px"
+            className="object-contain"
+          />
+          <Image
+            src="/cbea-logo.png"
+            alt="CBEA Logo"
+            width={72}
+            height={72}
+            sizes="72px"
+            className="object-contain"
+          />
+        </div>
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400">
           MMSU — College of Business and Economics Administration
         </div>
@@ -85,7 +104,7 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="bg-gray-50 py-20 dark:bg-gray-900">
-        <div className="mx-auto max-w-screen-xl px-4 md:px-6">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
           <h2 className="mb-10 text-center text-2xl font-bold text-gray-900 dark:text-white">
             Everything you need to manage rooms
           </h2>
@@ -98,7 +117,9 @@ export default function LandingPage() {
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10">
                   {f.icon}
                 </div>
-                <h3 className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">{f.title}</h3>
+                <h3 className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">
+                  {f.title}
+                </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{f.desc}</p>
               </div>
             ))}

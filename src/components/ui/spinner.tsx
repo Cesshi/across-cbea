@@ -25,7 +25,7 @@ export function Spinner({ size = 'md', center = false, className }: SpinnerProps
     >
       <Image
         src="/cbea-logo.png"
-        alt="DRRM-H Logo"
+        alt="CBEA Logo"
         sizes="(max-width: 768px) 48px, 64px"
         className="object-contain"
         fill

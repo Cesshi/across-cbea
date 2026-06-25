@@ -35,7 +35,7 @@ export function AuthHeader({ children, maxWidth = 'md', className, ...props }: A
               i === current ? 'opacity-100' : 'opacity-0'
             )}
           >
-            <Image src={src} alt="" fill className="object-cover" priority={i === 0} />
+            <Image src={src} alt={src} fill className="object-cover" priority={i === 0} />
           </div>
         ))}
         <div className="bg-brand-900/60 absolute inset-0" />
@@ -52,7 +52,7 @@ export function AuthHeader({ children, maxWidth = 'md', className, ...props }: A
         <div className="mb-8 flex flex-wrap items-center gap-2">
           <Image
             src="/mmsu-logo.png"
-            alt="UP Manila Logo"
+            alt="MMSU Logo"
             width={64}
             height={64}
             className="object-contain sm:h-16 sm:w-16"
@@ -60,7 +60,7 @@ export function AuthHeader({ children, maxWidth = 'md', className, ...props }: A
           <div className="hidden h-10 w-px bg-gray-200 sm:block dark:bg-gray-700" />
           <Image
             src="/cbea-logo.png"
-            alt="IRS Logo"
+            alt="CBEA Logo"
             width={64}
             height={64}
             sizes="64px"

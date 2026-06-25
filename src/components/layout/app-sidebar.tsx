@@ -123,7 +123,7 @@ export function AppSidebar() {
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
             src="/cbea-logo.png"
-            alt="ACROSS Logo"
+            alt="CBEA Logo"
             width={42}
             height={42}
             sizes="42px"
