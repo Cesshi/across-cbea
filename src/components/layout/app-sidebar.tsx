@@ -124,11 +124,11 @@ export function AppSidebar() {
       >
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
-            src="/across-logo.png"
+            src="/cbea-logo.png"
             alt="ACROSS Logo"
-            width={48}
-            height={48}
-            sizes="48px"
+            width={42}
+            height={42}
+            sizes="42px"
             className="object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';

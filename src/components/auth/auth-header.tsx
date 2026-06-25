@@ -51,7 +51,7 @@ export function AuthHeader({ children, maxWidth = 'md', className, ...props }: A
       >
         <div className="mb-8 flex flex-wrap items-center gap-2">
           <Image
-            src="/up-logo.png"
+            src="/mmsu-logo.png"
             alt="UP Manila Logo"
             width={64}
             height={64}
@@ -59,16 +59,7 @@ export function AuthHeader({ children, maxWidth = 'md', className, ...props }: A
           />
           <div className="hidden h-10 w-px bg-gray-200 sm:block dark:bg-gray-700" />
           <Image
-            src="/upm-drrmh-logo.png"
-            alt="DRRM-H Logo"
-            width={64}
-            height={64}
-            sizes="64px"
-            className="object-contain"
-          />
-          <div className="hidden h-10 w-px bg-gray-200 sm:block dark:bg-gray-700" />
-          <Image
-            src="/irs-logo.png"
+            src="/cbea-logo.png"
             alt="IRS Logo"
             width={64}
             height={64}
