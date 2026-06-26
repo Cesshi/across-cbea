@@ -7,9 +7,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'DRRM-H - IRS',
+  title: 'ACROSS - MMSU CBEA',
   description:
-    'UP Manila Disaster Risk Reduction Management in Health Program - Incident Reporting System',
+    'Automated Classroom Reservation and Scheduling System for the Mariano Marcos State University College of Business, Economics, and Accountancy',
   icons: {
     icon: '/cbea-logo.png',
   },
