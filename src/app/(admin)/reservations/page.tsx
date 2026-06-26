@@ -235,7 +235,7 @@ export default function ReservationsPage() {
               />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {reservations.length ?? 0} total
+              {reservations.filter((r) => r.status === 'approved').length} approved
             </p>
           </div>
           <Button onClick={openAdd} startIcon={<Plus size={16} />}>
