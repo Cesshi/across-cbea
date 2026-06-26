@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Reservation } from '@prisma/client';
 import { CheckCircle2, ChevronRight, Clock, Info, User } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
@@ -54,6 +54,8 @@ export default function ReservationPage() {
   const [pendingChange, setPendingChange] = useState<Reservation | null>(null);
   const [changeTarget, setChangeTarget] = useState<Reservation | null>(null);
 
+  const [subjectOpen, setSubjectOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -74,6 +76,20 @@ export default function ReservationPage() {
   const watchDay = watch('day');
   const watchStart = watch('start_time');
   const watchEnd = watch('end_time');
+
+  const hasSubjectErrors = !!(
+    errors.course ||
+    errors.year ||
+    errors.section ||
+    errors.course_code ||
+    errors.course_title ||
+    errors.lec_units ||
+    errors.lab_units
+  );
+
+  useEffect(() => {
+    if (hasSubjectErrors) setSubjectOpen(true);
+  }, [hasSubjectErrors]);
 
   const availableRooms = useMemo(
     () =>
@@ -137,6 +153,7 @@ export default function ReservationPage() {
     setValue('end_time', '');
     setPendingChange(null);
     setChangeTarget(null);
+    setSubjectOpen(false);
   };
 
   function confirmChangeTarget() {
@@ -251,71 +268,73 @@ export default function ReservationPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        {/* Class info */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input
-            label="Course / Program"
-            required
-            placeholder="e.g. BSAC"
-            error={!!errors.course}
-            hint={errors.course?.message}
-            {...register('course')}
-          />
-          <Select
-            label="Year Level"
-            required
-            options={yearOptions}
-            error={!!errors.year}
-            hint={errors.year?.message}
-            {...register('year')}
-          />
-          <Input
-            label="Section"
-            required
-            placeholder="e.g. A"
-            error={!!errors.section}
-            hint={errors.section?.message}
-            {...register('section')}
-          />
-        </div>
+        {/* Class info — always shown in new mode; collapsible in change mode */}
+        {mode === 'new' && (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Input
+                label="Course / Program"
+                required
+                placeholder="e.g. BSAC"
+                error={!!errors.course}
+                hint={errors.course?.message}
+                {...register('course')}
+              />
+              <Select
+                label="Year Level"
+                required
+                options={yearOptions}
+                error={!!errors.year}
+                hint={errors.year?.message}
+                {...register('year')}
+              />
+              <Input
+                label="Section"
+                required
+                placeholder="e.g. A"
+                error={!!errors.section}
+                hint={errors.section?.message}
+                {...register('section')}
+              />
+            </div>
 
-        {/* Subject info */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input
-            label="Course Code"
-            required
-            placeholder="e.g. ACC 101"
-            error={!!errors.course_code}
-            hint={errors.course_code?.message}
-            {...register('course_code')}
-          />
-          <Input
-            label="Course Title"
-            required
-            placeholder="e.g. Financial Accounting"
-            error={!!errors.course_title}
-            hint={errors.course_title?.message}
-            {...register('course_title')}
-          />
-        </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input
+                label="Course Code"
+                required
+                placeholder="e.g. ACC 101"
+                error={!!errors.course_code}
+                hint={errors.course_code?.message}
+                {...register('course_code')}
+              />
+              <Input
+                label="Course Title"
+                required
+                placeholder="e.g. Financial Accounting"
+                error={!!errors.course_title}
+                hint={errors.course_title?.message}
+                {...register('course_title')}
+              />
+            </div>
 
-        {/* Units */}
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Lec Units"
-            placeholder="e.g. 3"
-            error={!!errors.lec_units}
-            hint={errors.lec_units?.message}
-            {...register('lec_units')}
-          />
-          <Input
-            label="Lab Units"
-            placeholder="e.g. 1 (3 hours)"
-            error={!!errors.lab_units}
-            hint={errors.lab_units?.message}
-            {...register('lab_units')}
-          />
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Lec Units"
+                placeholder="e.g. 3"
+                error={!!errors.lec_units}
+                hint={errors.lec_units?.message}
+                {...register('lec_units')}
+              />
+              <Input
+                label="Lab Units"
+                placeholder="e.g. 1 (3 hours)"
+                error={!!errors.lab_units}
+                hint={errors.lab_units?.message}
+                {...register('lab_units')}
+              />
+            </div>
+          </>
+        )}
 
         {/* Room + Day */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -338,7 +357,6 @@ export default function ReservationPage() {
             {...register('day')}
           />
         </div>
-
         {/* Time slot picker — shown after room + day are selected */}
         {showPicker ? (
           <div className="space-y-3">
@@ -448,7 +466,6 @@ export default function ReservationPage() {
             Select a room and day pattern above to choose your time slot.
           </div>
         )}
-
         {/* Confirm change dialog */}
         <ConfirmDialog
           isOpen={!!pendingChange}
@@ -464,6 +481,93 @@ export default function ReservationPage() {
           }
         />
 
+        {mode === 'change' && (
+          // Change mode: class details auto-filled from selected reservation, collapsible
+          <details
+            open={subjectOpen}
+            onToggle={(e) => setSubjectOpen((e.target as HTMLDetailsElement).open)}
+            className="rounded-xl border border-gray-200 dark:border-gray-700"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white [&::-webkit-details-marker]:hidden">
+              <span className={cn(hasSubjectErrors && 'text-red-500 dark:text-red-400')}>
+                Subject details{hasSubjectErrors ? ' — fix required fields' : ''}
+              </span>
+              <ChevronRight
+                size={15}
+                className={cn(
+                  'transition-transform duration-200',
+                  subjectOpen ? 'rotate-90' : '',
+                  hasSubjectErrors ? 'text-red-400' : 'text-gray-400'
+                )}
+              />
+            </summary>
+            <div className="space-y-4 border-t border-gray-200 px-4 py-4 dark:border-gray-700">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Input
+                  label="Course / Program"
+                  required
+                  placeholder="e.g. BSAC"
+                  error={!!errors.course}
+                  hint={errors.course?.message}
+                  {...register('course')}
+                />
+                <Select
+                  label="Year Level"
+                  required
+                  options={yearOptions}
+                  error={!!errors.year}
+                  hint={errors.year?.message}
+                  {...register('year')}
+                />
+                <Input
+                  label="Section"
+                  required
+                  placeholder="e.g. A"
+                  error={!!errors.section}
+                  hint={errors.section?.message}
+                  {...register('section')}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
+                  label="Course Code"
+                  required
+                  placeholder="e.g. ACC 101"
+                  error={!!errors.course_code}
+                  hint={errors.course_code?.message}
+                  {...register('course_code')}
+                />
+                <Input
+                  label="Course Title"
+                  required
+                  placeholder="e.g. Financial Accounting"
+                  error={!!errors.course_title}
+                  hint={errors.course_title?.message}
+                  {...register('course_title')}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Lec Units"
+                  placeholder="e.g. 3"
+                  error={!!errors.lec_units}
+                  hint={errors.lec_units?.message}
+                  {...register('lec_units')}
+                />
+                <Input
+                  label="Lab Units"
+                  placeholder="e.g. 1 (3 hours)"
+                  error={!!errors.lab_units}
+                  hint={errors.lab_units?.message}
+                  {...register('lab_units')}
+                />
+              </div>
+            </div>
+          </details>
+        )}
+
         {/* Notes */}
         <Textarea
           label="Notes (optional)"
@@ -471,7 +575,6 @@ export default function ReservationPage() {
           placeholder="Additional information..."
           {...register('notes')}
         />
-
         <button
           type="submit"
           disabled={createMutation.isPending}
