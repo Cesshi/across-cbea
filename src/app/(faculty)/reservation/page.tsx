@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Reservation } from '@prisma/client';
-import { CheckCircle2, ChevronRight, Clock, Info, User } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Clock, Info } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -230,24 +230,6 @@ export default function ReservationPage() {
         </p>
       </div>
 
-      {/* Requesting as banner */}
-      <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 dark:border-brand-500/20 dark:bg-brand-500/5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-500/20">
-          <User size={16} className="text-brand-600 dark:text-brand-400" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-brand-500 dark:text-brand-400">
-            Requesting as
-          </p>
-          <p className="truncate text-base font-semibold text-gray-900 dark:text-white">
-            {userProfile?.full_name ?? '—'}
-          </p>
-          {userProfile?.email && (
-            <p className="truncate text-sm text-gray-500 dark:text-gray-400">{userProfile.email}</p>
-          )}
-        </div>
-      </div>
-
       {/* Mode toggle */}
       <div className="mb-6 flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800">
         {(['new', 'change'] as Mode[]).map((m) => (
@@ -331,6 +313,26 @@ export default function ReservationPage() {
                 error={!!errors.lab_units}
                 hint={errors.lab_units?.message}
                 {...register('lab_units')}
+              />
+            </div>
+
+            {/* Faculty info */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input
+                label="Faculty Name"
+                required
+                placeholder="e.g. Dr. Juan Dela Cruz"
+                error={!!errors.prof}
+                hint={errors.prof?.message}
+                {...register('prof')}
+              />
+              <Input
+                label="Email (optional)"
+                type="email"
+                placeholder="faculty@mmsu.edu.ph"
+                error={!!errors.email}
+                hint={errors.email?.message}
+                {...register('email')}
               />
             </div>
           </>
@@ -562,6 +564,26 @@ export default function ReservationPage() {
                   error={!!errors.lab_units}
                   hint={errors.lab_units?.message}
                   {...register('lab_units')}
+                />
+              </div>
+
+              {/* Faculty info */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
+                  label="Faculty Name"
+                  required
+                  placeholder="e.g. Dr. Juan Dela Cruz"
+                  error={!!errors.prof}
+                  hint={errors.prof?.message}
+                  {...register('prof')}
+                />
+                <Input
+                  label="Email (optional)"
+                  type="email"
+                  placeholder="faculty@mmsu.edu.ph"
+                  error={!!errors.email}
+                  hint={errors.email?.message}
+                  {...register('email')}
                 />
               </div>
             </div>
