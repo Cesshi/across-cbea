@@ -209,7 +209,7 @@ export function ScheduleGrid({
                     key={r.id}
                     onMouseEnter={(e) => setTooltip({ r, x: e.clientX, y: e.clientY })}
                     onMouseLeave={() => setTooltip(null)}
-                    className="absolute inset-x-1 cursor-default overflow-hidden rounded-md bg-brand-100 px-1.5 py-1 transition hover:bg-brand-200 dark:bg-brand-500/20 dark:hover:bg-brand-500/30"
+                    className="absolute inset-x-1 cursor-default overflow-hidden rounded-md bg-brand-100 px-1.5 py-1 transition hover:bg-brand-200 dark:bg-brand-500/50 dark:hover:bg-brand-500/30"
                     style={{ top: top + 1, height: Math.max(height - 2, 20) }}
                   >
                     <p className="truncate text-xs font-medium leading-tight text-brand-600 dark:text-brand-400">
