@@ -39,7 +39,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/schedule"
+              href="/schedules"
               className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
             >
               Schedule
@@ -77,9 +77,17 @@ export default function LandingPage() {
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400">
           MMSU — College of Business and Economics Administration
         </div>
-        <h1 className="mb-4 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-          Academic Classroom Occupancy
-          <span className="text-brand-500"> Scheduling System</span>
+        <h1 className="mb-4 max-w-2xl text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+          <span className="text-brand-500 font-extrabold">A</span>cademic{' '}
+          <span className="text-brand-500 font-extrabold">C</span>
+          lass<span className="text-brand-500 font-extrabold">R</span>oom{' '}
+          <span className="text-brand-500 font-extrabold">O</span>
+          ccupancy
+          <span className="text-brand-500 font-bold">
+            {' '}
+            <span className="font-extrabold">S</span>cheduling{' '}
+            <span className="font-extrabold">S</span>ystem
+          </span>
         </h1>
         <p className="mb-8 max-w-lg text-base text-gray-500 dark:text-gray-400">
           Streamline room reservations, view live schedules, and eliminate scheduling conflicts
@@ -87,7 +95,7 @@ export default function LandingPage() {
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link
-            href="/schedule"
+            href="/schedules"
             className="flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:border-brand-400 hover:text-brand-600 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500 dark:hover:text-brand-400"
           >
             <CalendarDays size={16} />
