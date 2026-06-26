@@ -94,12 +94,12 @@ export function TimeSlotPicker({
   ): 'occupied' | 'vacating' | 'selected' | 'selecting' | 'anchor' | 'free' {
     if (effectiveOccupant(slotMins)) return 'occupied';
     if (anchor === slotMins) return 'anchor';
-    if (selStart !== null && selEnd !== null && slotMins >= selStart && slotMins <= selEnd)
+    if (selStart !== null && selEnd !== null && slotMins >= selStart && slotMins < selEnd)
       return 'selected';
     if (anchor !== null && hover !== null) {
       const lo = Math.min(anchor, hover);
-      const hi = Math.max(anchor, hover);
-      if (slotMins >= lo && slotMins <= hi) return 'selecting';
+      const hi = Math.max(anchor, hover) + SLOT_MIN;
+      if (slotMins >= lo && slotMins < hi) return 'selecting';
     }
     if (isVacating(slotMins)) return 'vacating';
     return 'free';
@@ -126,13 +126,15 @@ export function TimeSlotPicker({
     }
 
     const lo = Math.min(anchor, slotMins);
-    const hi = Math.max(anchor, slotMins);
+    const hiRaw = Math.max(anchor, slotMins);
 
-    if (lo === hi) {
+    if (lo === hiRaw) {
       setAnchor(null);
       onSelect('', '');
       return;
     }
+
+    const hi = hiRaw + SLOT_MIN;
 
     const hasConflict = reservations.some((r) => {
       if (changeTarget && r.id === changeTarget.id) return false;
