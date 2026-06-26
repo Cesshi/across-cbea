@@ -396,7 +396,7 @@ export default function ReservationPage() {
                     setValue('start_time', '');
                     setValue('end_time', '');
                   }}
-                  className="text-[11px] text-orange-500 underline hover:text-orange-700"
+                  className="text-xs text-orange-500 underline hover:text-orange-700"
                 >
                   Cancel
                 </button>

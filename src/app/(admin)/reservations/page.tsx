@@ -128,7 +128,7 @@ export default function ReservationsPage() {
       header: () => (
         <div>
           <p>No. of Units</p>
-          <div className="mt-0.5 flex gap-6 text-[10px] font-normal text-gray-400">
+          <div className="mt-0.5 flex gap-6 text-xs font-normal text-gray-400">
             <span>Lec</span>
             <span>Lab</span>
           </div>

@@ -151,7 +151,7 @@ export function ScheduleGrid({
               <p className="truncate text-xs font-semibold text-gray-700 dark:text-gray-200">
                 {room.name}
               </p>
-              <p className="truncate text-[10px] text-gray-400 dark:text-gray-500">{room.type}</p>
+              <p className="truncate text-xs text-gray-400 dark:text-gray-500">{room.type}</p>
             </div>
           ))}
         </div>
@@ -166,7 +166,7 @@ export function ScheduleGrid({
             {timeSlots.map((hour) => (
               <div
                 key={hour}
-                className="absolute right-2 text-right text-[10px] leading-none text-gray-400 dark:text-gray-500"
+                className="absolute right-2 text-right text-xs leading-none text-gray-400 dark:text-gray-500"
                 style={{ top: labelTop(hour) }}
               >
                 {formatHour(hour)}
@@ -212,14 +212,14 @@ export function ScheduleGrid({
                     className="absolute inset-x-1 cursor-default overflow-hidden rounded-md bg-brand-100 px-1.5 py-1 transition hover:bg-brand-200 dark:bg-brand-500/20 dark:hover:bg-brand-500/30"
                     style={{ top: top + 1, height: Math.max(height - 2, 20) }}
                   >
-                    <p className="truncate text-[9px] font-medium leading-tight text-brand-600 dark:text-brand-400">
+                    <p className="truncate text-xs font-medium leading-tight text-brand-600 dark:text-brand-400">
                       {formatTime(r.start_time)}–{formatTime(r.end_time)}
                     </p>
-                    <p className="truncate text-[11px] font-semibold leading-tight text-brand-800 dark:text-brand-200">
+                    <p className="truncate text-sm font-semibold leading-tight text-brand-800 dark:text-brand-200">
                       {r.course_code}
                     </p>
                     {height >= 42 && (
-                      <p className="truncate text-[9px] leading-tight text-brand-700 opacity-70 dark:text-brand-300">
+                      <p className="truncate text-xs leading-tight text-brand-700 opacity-70 dark:text-brand-300">
                         {r.prof}
                       </p>
                     )}
