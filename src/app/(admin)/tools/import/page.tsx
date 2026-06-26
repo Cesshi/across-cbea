@@ -33,6 +33,17 @@ function normalizeHeader(h: string): string {
     .replace(/\s+/g, ' ');
 }
 
+// Shifts hours 1–6 to PM since school hours run 7 AM – 9 PM (no midnight classes).
+// e.g. "1:00" → "13:00", "7:00" stays "07:00", "13:00" stays "13:00"
+function normalizeScheduleTime(t: string): string {
+  const m = t.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return t;
+  let h = parseInt(m[1]);
+  const min = m[2];
+  if (h >= 1 && h <= 6) h += 12;
+  return `${h.toString().padStart(2, '0')}:${min}`;
+}
+
 // Maps raw column names from the real Excel file to ImportRow keys
 const HEADER_MAP: Record<string, string> = {
   faculty: 'prof',
@@ -78,10 +89,16 @@ function parseSheet(data: unknown[][]): ImportRow[] {
         obj[f] = String(row[i] ?? '').trim();
       });
 
-      // Split "08:00-11:00" into start_time / end_time
+      // Split "08:00-11:00" into start_time / end_time; normalize ambiguous PM times
       const timeParts = (obj['time'] ?? '').split('-');
-      const start_time = timeParts[0]?.trim() ?? '';
-      const end_time = timeParts[1]?.trim() ?? '';
+      const start_time = normalizeScheduleTime(timeParts[0]?.trim() ?? '');
+      let end_time = normalizeScheduleTime(timeParts[1]?.trim() ?? '');
+      // If end is before start after normalization, the end is still an unshifted PM hour — add 12
+      const [sh, sm] = start_time.split(':').map(Number);
+      const [eh, em] = end_time.split(':').map(Number);
+      if (!isNaN(sh) && !isNaN(eh) && eh * 60 + (em || 0) <= sh * 60 + (sm || 0) && eh + 12 <= 24) {
+        end_time = `${(eh + 12).toString().padStart(2, '0')}:${end_time.split(':')[1]}`;
+      }
 
       return {
         prof: obj['prof'] ?? '',
@@ -218,7 +235,7 @@ export default function ImportSchedulePage() {
       {/* Preview step */}
       {step === 'preview' && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center gap-2 justify-between">
             <div className="flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
                 <CheckCircle2 size={15} />
