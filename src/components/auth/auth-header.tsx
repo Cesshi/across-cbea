@@ -67,8 +67,8 @@ export function AuthHeader({ children, maxWidth = 'md', className, ...props }: A
             className="object-contain"
           />
           <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">DRRM-H - IRS</p>
-            <p className="text-xs text-gray-500">Incident Reporting System</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">ACROSS</p>
+            <p className="text-xs text-gray-500">MMSU-CBEA</p>
           </div>
         </div>
         {children}
