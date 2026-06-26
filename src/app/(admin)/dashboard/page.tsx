@@ -14,7 +14,6 @@ import type { Reservation } from '@prisma/client';
 import { AlertTriangle, BookOpen, Building2, Check, ClipboardList, Inbox, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// TODO: also render here the schedule component
 export default function DashboardPage() {
   const { data: rooms = [] } = useRooms();
   const { data: approved = [] } = useReservationsByStatus('approved');

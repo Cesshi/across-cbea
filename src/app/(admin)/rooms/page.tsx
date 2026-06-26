@@ -143,6 +143,8 @@ export default function RoomsPage() {
         title="Delete Room"
         message="This will permanently delete the room and all its reservations. This cannot be undone."
         confirmLabel="Delete Room"
+        loadingText="Deleting..."
+        variant="danger"
         isLoading={deleteMutation.isPending}
       />
     </>

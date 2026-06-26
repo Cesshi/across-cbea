@@ -261,6 +261,8 @@ export default function ReservationsPage() {
         title="Delete Reservation"
         message="This reservation will be permanently deleted."
         confirmLabel="Delete"
+        loadingText="Deleting..."
+        variant="danger"
         isLoading={deleteMutation.isPending}
       />
     </>

@@ -196,6 +196,8 @@ export default function UsersPage() {
             : `Activate ${toggleTarget?.full_name || toggleTarget?.email}? They will be able to sign in again.`
         }
         confirmLabel={toggleTarget?.is_active ? 'Deactivate' : 'Activate'}
+        loadingText={toggleTarget?.is_active ? 'Deactivating...' : 'Activating...'}
+        variant={toggleTarget?.is_active ? 'warning' : 'success'}
         isLoading={toggleMutation.isPending}
       />
 
@@ -215,6 +217,8 @@ export default function UsersPage() {
         title="Delete User"
         message="This will permanently delete the user account from both the database and authentication. This cannot be undone."
         confirmLabel="Delete User"
+        loadingText="Deleting..."
+        variant="danger"
         isLoading={deleteMutation.isPending}
       />
     </>

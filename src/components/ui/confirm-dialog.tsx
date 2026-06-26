@@ -1,9 +1,11 @@
 'use client';
 
 import { cn } from '@/lib';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, HelpCircle, Info, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from './button';
+
+type DialogVariant = 'danger' | 'warning' | 'primary' | 'success' | 'info';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -12,11 +14,65 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel?: string;
-  variant?: 'danger' | 'primary';
+  cancelLabel?: string;
+  variant?: DialogVariant;
   isLoading?: boolean;
+  loadingText?: string;
 }
 
-// TODO: make this to be dynamic also
+const VARIANT_CONFIG: Record<
+  DialogVariant,
+  {
+    Icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    animation: string;
+    buttonVariant: 'primary' | 'danger';
+    buttonClass: string;
+  }
+> = {
+  danger: {
+    Icon: Trash2,
+    iconBg: 'bg-red-100 dark:bg-red-500/15',
+    iconColor: 'text-error-500',
+    animation: 'animate-bounce',
+    buttonVariant: 'danger',
+    buttonClass: '',
+  },
+  warning: {
+    Icon: AlertTriangle,
+    iconBg: 'bg-amber-100 dark:bg-amber-500/15',
+    iconColor: 'text-amber-500',
+    animation: '',
+    buttonVariant: 'primary',
+    buttonClass: '!bg-amber-500 hover:!bg-amber-600 dark:disabled:!bg-amber-800',
+  },
+  primary: {
+    Icon: HelpCircle,
+    iconBg: 'bg-brand-100 dark:bg-brand-500/15',
+    iconColor: 'text-brand-500',
+    animation: '',
+    buttonVariant: 'primary',
+    buttonClass: '',
+  },
+  success: {
+    Icon: CheckCircle2,
+    iconBg: 'bg-green-100 dark:bg-green-500/15',
+    iconColor: 'text-green-500',
+    animation: '',
+    buttonVariant: 'primary',
+    buttonClass: '!bg-green-600 hover:!bg-green-700 dark:disabled:!bg-green-800',
+  },
+  info: {
+    Icon: Info,
+    iconBg: 'bg-blue-100 dark:bg-blue-500/15',
+    iconColor: 'text-blue-500',
+    animation: '',
+    buttonVariant: 'primary',
+    buttonClass: '!bg-blue-600 hover:!bg-blue-700 dark:disabled:!bg-blue-800',
+  },
+};
+
 export function ConfirmDialog({
   isOpen,
   onClose,
@@ -24,8 +80,10 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
   variant = 'danger',
   isLoading = false,
+  loadingText,
 }: ConfirmDialogProps) {
   const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -33,12 +91,12 @@ export function ConfirmDialog({
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
-      const timer = setTimeout(() => setIsVisible(true), 10);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => setIsVisible(true), 10);
+      return () => clearTimeout(t);
     } else {
       setIsVisible(false);
-      const timer = setTimeout(() => setMounted(false), 200);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => setMounted(false), 200);
+      return () => clearTimeout(t);
     }
   }, [isOpen]);
 
@@ -58,6 +116,9 @@ export function ConfirmDialog({
   }, [isOpen]);
 
   if (!mounted) return null;
+
+  const { Icon, iconBg, iconColor, animation, buttonVariant, buttonClass } =
+    VARIANT_CONFIG[variant];
 
   return (
     <div
@@ -84,25 +145,29 @@ export function ConfirmDialog({
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {variant === 'danger' && (
-          <div className="mb-4 flex h-12 w-12 animate-bounce items-center justify-center rounded-full bg-red-100 dark:bg-red-500/15">
-            <AlertTriangle size={22} className="text-error-500" />
-          </div>
-        )}
+        <div
+          className={cn(
+            'mb-4 flex h-12 w-12 items-center justify-center rounded-full',
+            iconBg,
+            animation
+          )}
+        >
+          <Icon size={22} className={iconColor} />
+        </div>
 
         <h2 className="mb-1 text-xl font-semibold text-gray-800 dark:text-white/90">{title}</h2>
         <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">{message}</p>
 
         <div className="flex items-center justify-end gap-3">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button
-            variant={variant === 'danger' ? 'danger' : 'primary'}
+            variant={buttonVariant}
             onClick={onConfirm}
             isLoading={isLoading}
-            // TODO: make this dynamic
-            loadingText="Deleting..."
+            loadingText={loadingText ?? confirmLabel}
+            className={buttonClass}
           >
             {confirmLabel}
           </Button>

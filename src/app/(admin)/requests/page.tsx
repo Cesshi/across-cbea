@@ -271,6 +271,8 @@ export default function RequestsPage() {
         title="Delete Request"
         message="This request will be permanently deleted."
         confirmLabel="Delete"
+        loadingText="Deleting..."
+        variant="danger"
         isLoading={deleteMutation.isPending}
       />
     </>
