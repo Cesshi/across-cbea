@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
   {
     icon: <BookOpen size={20} />,
     name: 'Schedule',
-    path: '/schedules',
+    path: '/schedule',
   },
   {
     icon: <ClipboardList size={20} />,
