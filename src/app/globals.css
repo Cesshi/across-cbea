@@ -23,19 +23,33 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  /* Brand - UPM Maroon */
-  --color-brand-25: #fff5f5;
-  --color-brand-50: #ffe5e5;
-  --color-brand-100: #f5c6c6;
-  --color-brand-200: #e58e8e;
-  --color-brand-300: #d65a5a;
-  --color-brand-400: #c53030;
-  --color-brand-500: #a11d1d;
-  --color-brand-600: #7f1616;
-  --color-brand-700: #5f1010;
-  --color-brand-800: #470b0b;
-  --color-brand-900: #2f0707;
-  --color-brand-950: #1a0303;
+  /* Brand - Orange (from logo primary color) */
+  --color-brand-25: #fff8f0;
+  --color-brand-50: #fff0db;
+  --color-brand-100: #ffd9a8;
+  --color-brand-200: #ffb85c;
+  --color-brand-300: #ff9a2e;
+  --color-brand-400: #f57c00;
+  --color-brand-500: #e65c00;
+  --color-brand-600: #c44a00;
+  --color-brand-700: #9c3800;
+  --color-brand-800: #742900;
+  --color-brand-900: #4d1a00;
+  --color-brand-950: #2a0d00;
+
+  /* Secondary - Forest Green (from logo green stripe) */
+  --color-secondary-25: #f2f8f0;
+  --color-secondary-50: #e0f0da;
+  --color-secondary-100: #bcddb2;
+  --color-secondary-200: #90c280;
+  --color-secondary-300: #64a84e;
+  --color-secondary-400: #428f2e;
+  --color-secondary-500: #2d7a1f;
+  --color-secondary-600: #1e5c12;
+  --color-secondary-700: #164a0d;
+  --color-secondary-800: #0f3608;
+  --color-secondary-900: #082404;
+  --color-secondary-950: #041202;
 
   --color-gray-25: #fcfcfd;
   --color-gray-50: #f9fafb;
@@ -51,20 +65,23 @@
   --color-gray-950: #0c111d;
   --color-gray-dark: #1a2231;
 
-  --color-success-50: #ecfdf3;
-  --color-success-100: #d1fadf;
-  --color-success-500: #12b76a;
-  --color-success-600: #039855;
+  /* Success - Green (from logo dark green stripe) */
+  --color-success-50: #edf6e8;
+  --color-success-100: #c8e6bb;
+  --color-success-500: #2d7a1f;
+  --color-success-600: #1e5c12;
 
-  --color-error-50: #fef3f2;
-  --color-error-100: #fee4e2;
-  --color-error-500: #f04438;
-  --color-error-600: #d92d20;
+  /* Error - kept semantically appropriate, slightly warmed to match palette */
+  --color-error-50: #fff3ee;
+  --color-error-100: #ffd9c8;
+  --color-error-500: #e63000;
+  --color-error-600: #bf2200;
 
-  --color-warning-50: #fffaeb;
-  --color-warning-100: #fef0c7;
-  --color-warning-500: #f79009;
-  --color-warning-600: #dc6803;
+  /* Warning - Golden Yellow (from logo bar chart accent) */
+  --color-warning-50: #fffbea;
+  --color-warning-100: #fff3c0;
+  --color-warning-500: #f5c400;
+  --color-warning-600: #d4a800;
 
   --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
   --shadow-theme-md:
