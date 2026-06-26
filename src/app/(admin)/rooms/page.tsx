@@ -139,7 +139,14 @@ export default function RoomsPage() {
       <ConfirmDialog
         isOpen={!!deleteId}
         onClose={() => setDeleteId('')}
-        onConfirm={() => deleteMutation.mutate(deleteId, { onSuccess: () => setDeleteId('') })}
+        onConfirm={() =>
+          deleteMutation.mutate(deleteId, {
+            onSuccess: () => {
+              toast.success('Room deleted');
+              setDeleteId('');
+            },
+          })
+        }
         title="Delete Room"
         message="This will permanently delete the room and all its reservations. This cannot be undone."
         confirmLabel="Delete Room"

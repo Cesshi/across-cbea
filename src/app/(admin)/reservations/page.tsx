@@ -257,7 +257,14 @@ export default function ReservationsPage() {
       <ConfirmDialog
         isOpen={!!deleteId}
         onClose={() => setDeleteId('')}
-        onConfirm={() => deleteMutation.mutate(deleteId, { onSuccess: () => setDeleteId('') })}
+        onConfirm={() =>
+          deleteMutation.mutate(deleteId, {
+            onSuccess: () => {
+              toast.success('Reservation deleted');
+              setDeleteId('');
+            },
+          })
+        }
         title="Delete Reservation"
         message="This reservation will be permanently deleted."
         confirmLabel="Delete"

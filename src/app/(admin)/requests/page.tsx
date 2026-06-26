@@ -30,6 +30,8 @@ export default function RequestsPage() {
   const [debounced, setDebounced] = useState('');
   const [activeTab, setActiveTab] = useState<StatusTab>('Pending');
   const [deleteId, setDeleteId] = useState('');
+  const [approveTarget, setApproveTarget] = useState<Reservation | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<Reservation | null>(null);
   const [notesModal, setNotesModal] = useState<{ open: boolean; notes: string; prof: string }>({
     open: false,
     notes: '',
@@ -61,16 +63,24 @@ export default function RequestsPage() {
     [all, activeTab]
   );
 
-  const handleApprove = (id: string) => {
-    approveMutation.mutate(id, {
-      onSuccess: () => toast.success('Request approved'),
+  const confirmApprove = () => {
+    if (!approveTarget) return;
+    approveMutation.mutate(approveTarget.id, {
+      onSuccess: () => {
+        toast.success('Request approved');
+        setApproveTarget(null);
+      },
       onError: () => toast.error('Failed to approve'),
     });
   };
 
-  const handleReject = (id: string) => {
-    rejectMutation.mutate(id, {
-      onSuccess: () => toast.success('Request rejected'),
+  const confirmReject = () => {
+    if (!rejectTarget) return;
+    rejectMutation.mutate(rejectTarget.id, {
+      onSuccess: () => {
+        toast.success('Request rejected');
+        setRejectTarget(null);
+      },
       onError: () => toast.error('Failed to reject'),
     });
   };
@@ -150,7 +160,7 @@ export default function RequestsPage() {
             {r.status === 'pending' && (
               <>
                 <button
-                  onClick={() => handleApprove(r.id)}
+                  onClick={() => setApproveTarget(r)}
                   disabled={approveMutation.isPending}
                   title="Approve"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-200 dark:bg-green-500/15 dark:hover:bg-green-500/25"
@@ -158,7 +168,7 @@ export default function RequestsPage() {
                   <Check size={14} />
                 </button>
                 <button
-                  onClick={() => handleReject(r.id)}
+                  onClick={() => setRejectTarget(r)}
                   disabled={rejectMutation.isPending}
                   title="Reject"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-600 transition hover:bg-red-200 dark:bg-red-500/15 dark:hover:bg-red-500/25"
@@ -265,9 +275,48 @@ export default function RequestsPage() {
       </Modal>
 
       <ConfirmDialog
+        isOpen={!!approveTarget}
+        onClose={() => setApproveTarget(null)}
+        onConfirm={confirmApprove}
+        title="Approve Request"
+        message={
+          approveTarget
+            ? `Approve ${approveTarget.prof}'s request for ${approveTarget.course_code} in ${approveTarget.room} (${approveTarget.day} · ${formatTime(approveTarget.start_time)}–${formatTime(approveTarget.end_time)})?`
+            : ''
+        }
+        confirmLabel="Approve"
+        loadingText="Approving..."
+        variant="success"
+        isLoading={approveMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={!!rejectTarget}
+        onClose={() => setRejectTarget(null)}
+        onConfirm={confirmReject}
+        title="Reject Request"
+        message={
+          rejectTarget
+            ? `Reject ${rejectTarget.prof}'s request for ${rejectTarget.course_code} in ${rejectTarget.room}? This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Reject"
+        loadingText="Rejecting..."
+        variant="danger"
+        isLoading={rejectMutation.isPending}
+      />
+
+      <ConfirmDialog
         isOpen={!!deleteId}
         onClose={() => setDeleteId('')}
-        onConfirm={() => deleteMutation.mutate(deleteId, { onSuccess: () => setDeleteId('') })}
+        onConfirm={() =>
+          deleteMutation.mutate(deleteId, {
+            onSuccess: () => {
+              toast.success('Request deleted');
+              setDeleteId('');
+            },
+          })
+        }
         title="Delete Request"
         message="This request will be permanently deleted."
         confirmLabel="Delete"
