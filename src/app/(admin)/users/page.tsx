@@ -141,17 +141,20 @@ export default function UsersPage() {
         <PageBreadcrumb pageTitle="Users" />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative min-w-2xs max-w-sm flex-1">
-            <Search
-              size={16}
-              className="absolute top-1/2 left-3 z-1 -translate-y-1/2 text-gray-400"
-            />
-            <Input
-              placeholder="Search by name or email..."
-              className="pl-9"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative min-w-2xs max-w-sm flex-1">
+              <Search
+                size={16}
+                className="absolute top-1/2 left-3 z-1 -translate-y-1/2 text-gray-400"
+              />
+              <Input
+                placeholder="Search by name or email..."
+                className="pl-9"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{users.length ?? 0} total</p>
           </div>
           <Button onClick={openAdd} startIcon={<Plus size={16} />}>
             Add User
