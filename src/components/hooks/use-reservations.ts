@@ -16,6 +16,7 @@ import {
   updateReservation,
   type CreateReservationInput,
   type ImportRow,
+  type ImportRowWithOptions,
   type UpdateReservationInput,
 } from '@/actions/reservations';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -140,7 +141,7 @@ export function usePreviewImport() {
 export function useBatchImport() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (rows: ImportRow[]) => batchImport(rows),
+    mutationFn: (rows: ImportRowWithOptions[]) => batchImport(rows),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
       queryClient.invalidateQueries({ queryKey: ['conflicts'] });

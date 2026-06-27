@@ -133,6 +133,11 @@ export async function rejectReservation(id: string) {
 
 export type ImportRow = Omit<CreateReservationInput, 'status'>;
 
+export type ImportRowWithOptions = ImportRow & {
+  status?: 'approved' | 'pending';
+  forceImport?: boolean; // skip server-side conflict re-check (user already acknowledged)
+};
+
 export type ImportPreviewRow = ImportRow & {
   hasConflict: boolean;
   conflicting?: { prof: string; course_code: string; section: string };
@@ -158,22 +163,25 @@ export async function previewImport(rows: ImportRow[]): Promise<ImportPreviewRow
 }
 
 /**
- * Batch insert approved rows. Skips conflicting rows.
- * Returns counts of inserted and skipped rows.
+ * Batch insert rows. Rows with forceImport=true skip the conflict re-check
+ * (used when the user has already acknowledged a conflict in the preview UI).
+ * Each row carries its own status ('approved' or 'pending').
  */
 export async function batchImport(
-  rows: ImportRow[]
+  rows: ImportRowWithOptions[]
 ): Promise<{ inserted: number; skipped: number }> {
   let inserted = 0;
   let skipped = 0;
 
-  for (const row of rows) {
-    const { hasConflict } = await detectConflict(row.room, row.day, row.start_time, row.end_time);
-    if (hasConflict) {
-      skipped++;
-      continue;
+  for (const { status = 'approved', forceImport = false, ...row } of rows) {
+    if (!forceImport) {
+      const { hasConflict } = await detectConflict(row.room, row.day, row.start_time, row.end_time);
+      if (hasConflict) {
+        skipped++;
+        continue;
+      }
     }
-    await prisma.reservation.create({ data: { ...row, status: 'approved' } });
+    await prisma.reservation.create({ data: { ...row, status } });
     inserted++;
   }
 
