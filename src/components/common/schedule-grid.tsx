@@ -3,7 +3,92 @@
 import { DAY_PATTERNS, formatTime, type DayPattern } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { Reservation, Room } from '@prisma/client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+const PALETTE = [
+  {
+    // Sky blue
+    card: 'bg-sky-100 hover:bg-sky-200 dark:bg-sky-500/30 dark:hover:bg-sky-500/20',
+    time: 'text-sky-600 dark:text-sky-400',
+    name: 'text-sky-900 dark:text-sky-200',
+    sub: 'text-sky-700 dark:text-sky-300',
+    dot: 'bg-sky-500',
+  },
+  {
+    // Lime green
+    card: 'bg-lime-100 hover:bg-lime-200 dark:bg-lime-500/30 dark:hover:bg-lime-500/20',
+    time: 'text-lime-600 dark:text-lime-400',
+    name: 'text-lime-900 dark:text-lime-200',
+    sub: 'text-lime-700 dark:text-lime-300',
+    dot: 'bg-lime-500',
+  },
+  {
+    // Fuchsia/magenta
+    card: 'bg-fuchsia-100 hover:bg-fuchsia-200 dark:bg-fuchsia-500/30 dark:hover:bg-fuchsia-500/20',
+    time: 'text-fuchsia-600 dark:text-fuchsia-400',
+    name: 'text-fuchsia-900 dark:text-fuchsia-200',
+    sub: 'text-fuchsia-700 dark:text-fuchsia-300',
+    dot: 'bg-fuchsia-500',
+  },
+  {
+    // Amber/yellow
+    card: 'bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-500/30 dark:hover:bg-yellow-500/20',
+    time: 'text-yellow-600 dark:text-yellow-400',
+    name: 'text-yellow-900 dark:text-yellow-200',
+    sub: 'text-yellow-700 dark:text-yellow-300',
+    dot: 'bg-yellow-500',
+  },
+  {
+    // Red (stronger than rose)
+    card: 'bg-red-100 hover:bg-red-200 dark:bg-red-500/30 dark:hover:bg-red-500/20',
+    time: 'text-red-600 dark:text-red-400',
+    name: 'text-red-900 dark:text-red-200',
+    sub: 'text-red-700 dark:text-red-300',
+    dot: 'bg-red-500',
+  },
+  {
+    // Teal (clearly green-leaning, not blue)
+    card: 'bg-teal-100 hover:bg-teal-200 dark:bg-teal-500/30 dark:hover:bg-teal-500/20',
+    time: 'text-teal-600 dark:text-teal-400',
+    name: 'text-teal-900 dark:text-teal-200',
+    sub: 'text-teal-700 dark:text-teal-300',
+    dot: 'bg-teal-500',
+  },
+  {
+    // Orange (clearly different from yellow/amber)
+    card: 'bg-orange-100 hover:bg-orange-200 dark:bg-orange-500/30 dark:hover:bg-orange-500/20',
+    time: 'text-orange-600 dark:text-orange-400',
+    name: 'text-orange-900 dark:text-orange-200',
+    sub: 'text-orange-700 dark:text-orange-300',
+    dot: 'bg-orange-500',
+  },
+  {
+    // Violet/purple (deep, distinct from fuchsia)
+    card: 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-500/30 dark:hover:bg-purple-500/20',
+    time: 'text-purple-600 dark:text-purple-400',
+    name: 'text-purple-900 dark:text-purple-200',
+    sub: 'text-purple-700 dark:text-purple-300',
+    dot: 'bg-purple-500',
+  },
+  {
+    // Rose/pink (warm, different from red)
+    card: 'bg-pink-100 hover:bg-pink-200 dark:bg-pink-500/30 dark:hover:bg-pink-500/20',
+    time: 'text-pink-600 dark:text-pink-400',
+    name: 'text-pink-900 dark:text-pink-200',
+    sub: 'text-pink-700 dark:text-pink-300',
+    dot: 'bg-pink-500',
+  },
+  {
+    // Emerald (deep green, clearly distinct from lime/teal)
+    card: 'bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-500/30 dark:hover:bg-emerald-500/20',
+    time: 'text-emerald-600 dark:text-emerald-400',
+    name: 'text-emerald-900 dark:text-emerald-200',
+    sub: 'text-emerald-700 dark:text-emerald-300',
+    dot: 'bg-emerald-500',
+  },
+] as const;
+
+type PaletteEntry = (typeof PALETTE)[number];
 
 const MIN_HOUR = 7;
 const MAX_HOUR = 21;
@@ -52,11 +137,30 @@ export function ScheduleGrid({
 }: ScheduleGridProps) {
   const [activePattern, setActivePattern] = useState<DayPattern>(defaultPattern);
   const [tooltip, setTooltip] = useState<{ r: Reservation; x: number; y: number } | null>(null);
+  const [stickyHeaderH, setStickyHeaderH] = useState(PILLS_H);
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = stickyHeaderRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setStickyHeaderH(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const filteredReservations = useMemo(
     () => reservations.filter((r) => r.day === activePattern),
     [reservations, activePattern]
   );
+
+  // Assign a stable color per program (r.course) across ALL reservations so
+  // the same program always gets the same color regardless of the active day.
+  const courseColorMap = useMemo(() => {
+    const courses = [...new Set(reservations.map((r) => r.course))].sort();
+    const map = new Map<string, PaletteEntry>();
+    courses.forEach((c, i) => map.set(c, PALETTE[i % PALETTE.length]));
+    return map;
+  }, [reservations]);
 
   const byRoom = useMemo(() => {
     const map: Record<string, Reservation[]> = {};
@@ -111,23 +215,40 @@ export function ScheduleGrid({
        * when scrolling in either direction.
        */}
       <div
-        className="sticky top-0 left-0 z-30 flex items-center gap-2 overflow-x-auto border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-950"
-        style={{ height: PILLS_H }}
+        ref={stickyHeaderRef}
+        className="sticky top-0 left-0 z-30 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950"
       >
-        {DAY_PATTERNS.map((pattern) => (
-          <button
-            key={pattern}
-            onClick={() => setActivePattern(pattern)}
-            className={cn(
-              'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-all',
-              activePattern === pattern
-                ? 'bg-brand-500 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            )}
-          >
-            {pattern}
-          </button>
-        ))}
+        {/* Day pattern pills */}
+        <div className="flex items-center gap-2 overflow-x-auto px-4" style={{ height: PILLS_H }}>
+          {DAY_PATTERNS.map((pattern) => (
+            <button
+              key={pattern}
+              onClick={() => setActivePattern(pattern)}
+              className={cn(
+                'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-all',
+                activePattern === pattern
+                  ? 'bg-brand-500 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              )}
+            >
+              {pattern}
+            </button>
+          ))}
+        </div>
+        {/* Course legend */}
+        {courseColorMap.size > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 dark:border-gray-800">
+            {[...courseColorMap.entries()].map(([course, color]) => (
+              <span
+                key={course}
+                className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400"
+              >
+                <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', color.dot)} />
+                {course}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Wide content (causes horizontal scroll) ── */}
@@ -135,7 +256,7 @@ export function ScheduleGrid({
         {/* Room header row — sticky just below the pills */}
         <div
           className="sticky z-20 flex border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900"
-          style={{ top: PILLS_H }}
+          style={{ top: stickyHeaderH }}
         >
           {/* Corner — sticky left-0 within the header row */}
           <div
@@ -204,22 +325,26 @@ export function ScheduleGrid({
                 const endMin = parseTimeToMinutes(r.end_time);
                 const top = cardTop(startMin);
                 const height = ((endMin - startMin) / 60) * HOUR_HEIGHT;
+                const color = courseColorMap.get(r.course) ?? PALETTE[0];
                 return (
                   <div
                     key={r.id}
                     onMouseEnter={(e) => setTooltip({ r, x: e.clientX, y: e.clientY })}
                     onMouseLeave={() => setTooltip(null)}
-                    className="absolute inset-x-1 cursor-default overflow-hidden rounded-md bg-brand-100 px-1.5 py-1 transition hover:bg-brand-200 dark:bg-brand-500/50 dark:hover:bg-brand-500/30"
+                    className={cn(
+                      'absolute inset-x-1 cursor-default overflow-hidden rounded-md px-1.5 py-1 transition',
+                      color.card
+                    )}
                     style={{ top: top + 1, height: Math.max(height - 2, 20) }}
                   >
-                    <p className="truncate text-xs font-medium leading-tight text-brand-600 dark:text-brand-400">
+                    <p className={cn('truncate text-xs font-medium leading-tight', color.time)}>
                       {formatTime(r.start_time)}–{formatTime(r.end_time)}
                     </p>
-                    <p className="truncate text-sm font-semibold leading-tight text-brand-800 dark:text-brand-200">
+                    <p className={cn('truncate text-sm font-semibold leading-tight', color.name)}>
                       {r.course_code}
                     </p>
                     {height >= 42 && (
-                      <p className="truncate text-xs leading-tight text-brand-700 opacity-70 dark:text-brand-300">
+                      <p className={cn('truncate text-xs leading-tight opacity-70', color.sub)}>
                         {r.prof}
                       </p>
                     )}
