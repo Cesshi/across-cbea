@@ -1,27 +1,27 @@
 'use client';
 
 import { PageBreadcrumb } from '@/components/common';
-import {
-  useAllConflicts,
-  useApproveReservation,
-  useRejectReservation,
-  useReservationsByStatus,
-} from '@/components/hooks/use-reservations';
+import { useAllConflicts, useReservationsByStatus } from '@/components/hooks/use-reservations';
 import { useRooms } from '@/components/hooks/use-rooms';
 import { Badge } from '@/components/ui';
 import { formatTime } from '@/lib/constants';
 import type { Reservation } from '@prisma/client';
-import { AlertTriangle, BookOpen, Building2, Check, ClipboardList, Inbox, X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import {
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  Building2,
+  ChevronRight,
+  ClipboardList,
+  Inbox,
+} from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { data: rooms = [] } = useRooms();
   const { data: approved = [] } = useReservationsByStatus('approved');
   const { data: pending = [] } = useReservationsByStatus('pending');
   const { data: conflicts = [] } = useAllConflicts();
-  const approveMutation = useApproveReservation();
-  const rejectMutation = useRejectReservation();
-
   // Vacant = rooms with no approved reservations at all
   const occupiedRooms = new Set(approved.map((r) => r.room));
   const vacantCount = rooms.filter((r) => r.is_active && !occupiedRooms.has(r.name)).length;
@@ -57,20 +57,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const handleApprove = (id: string) => {
-    approveMutation.mutate(id, {
-      onSuccess: () => toast.success('Approved'),
-      onError: () => toast.error('Failed to approve'),
-    });
-  };
-
-  const handleReject = (id: string) => {
-    rejectMutation.mutate(id, {
-      onSuccess: () => toast.success('Rejected'),
-      onError: () => toast.error('Failed to reject'),
-    });
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumb pageTitle="Dashboard" />
@@ -89,11 +75,19 @@ export default function DashboardPage() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               Pending Requests
             </h3>
-            {pending.length > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">
-                {pending.length}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {pending.length > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">
+                  {pending.length}
+                </span>
+              )}
+              <Link
+                href="/requests"
+                className="flex items-center gap-1 text-xs font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+              >
+                Manage <ArrowRight size={12} />
+              </Link>
+            </div>
           </div>
 
           {pending.length === 0 ? (
@@ -101,9 +95,10 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {(pending as Reservation[]).slice(0, 6).map((r) => (
-                <div
+                <Link
                   key={r.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 dark:border-white/5 dark:bg-white/5"
+                  href="/requests"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 transition hover:border-gray-200 hover:bg-gray-100 dark:border-white/5 dark:bg-white/5 dark:hover:border-white/10 dark:hover:bg-white/10"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
@@ -116,28 +111,16 @@ export default function DashboardPage() {
                       {r.day} · {formatTime(r.start_time)}–{formatTime(r.end_time)}
                     </p>
                   </div>
-                  <div className="flex shrink-0 gap-1.5">
-                    <button
-                      onClick={() => handleApprove(r.id)}
-                      disabled={approveMutation.isPending}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-200 dark:bg-green-500/15 dark:hover:bg-green-500/25"
-                    >
-                      <Check size={13} />
-                    </button>
-                    <button
-                      onClick={() => handleReject(r.id)}
-                      disabled={rejectMutation.isPending}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-600 transition hover:bg-red-200 dark:bg-red-500/15 dark:hover:bg-red-500/25"
-                    >
-                      <X size={13} />
-                    </button>
-                  </div>
-                </div>
+                  <ChevronRight size={14} className="shrink-0 text-gray-400" />
+                </Link>
               ))}
               {pending.length > 6 && (
-                <p className="pt-1 text-center text-xs text-gray-400">
-                  +{pending.length - 6} more — go to Requests page
-                </p>
+                <Link
+                  href="/requests"
+                  className="block pt-1 text-center text-xs text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                >
+                  +{pending.length - 6} more — view all requests
+                </Link>
               )}
             </div>
           )}
