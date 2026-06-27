@@ -33,6 +33,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { Reservation } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/react-table';
 import { AlertTriangle, Clock, Info, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -55,6 +56,8 @@ const normalizeYear = (raw: string): ReservationFormData['year'] => {
 };
 
 export default function ReservationsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,6 +71,17 @@ export default function ReservationsPage() {
     const t = setTimeout(() => setDebounced(query), 400);
     return () => clearTimeout(t);
   }, [query]);
+
+  // Auto-open edit modal when navigated here with ?edit=<id>
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || reservations.length === 0) return;
+    const target = reservations.find((r) => r.id === editId);
+    if (target) {
+      openEdit(target);
+      router.replace('/reservations'); // clean up the URL
+    }
+  }, [searchParams, reservations]);
 
   const openAdd = () => {
     setEditItem(null);
@@ -406,12 +420,6 @@ function ReservationModal({
   }, [watchRoom, watchDay, watchStart, watchEnd, editItem?.id]);
 
   const onSubmit = async (data: ReservationFormData) => {
-    if (conflict && data.status === 'approved') {
-      toast.error(
-        'Cannot save: this slot has a conflict. Change the status to pending or pick another slot.'
-      );
-      return;
-    }
     try {
       if (editItem) {
         await updateMutation.mutateAsync({ id: editItem.id, data });
@@ -624,14 +632,22 @@ function ReservationModal({
         )}
 
         {/* Conflict alert */}
-        {checkingConflict && <p className="text-xs text-gray-400">Checking for conflicts...</p>}
+        {checkingConflict && (
+          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+            Checking for scheduling conflicts…
+          </div>
+        )}
         {conflict && !checkingConflict && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
-            <div className="text-sm text-amber-700 dark:text-amber-400">
-              <p className="font-medium">Scheduling conflict detected</p>
-              <p className="text-xs">
-                {conflict.prof} — {conflict.course_code} ({conflict.section}) overlaps this slot.
+          <div className="flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-3.5 dark:border-red-500/40 dark:bg-red-500/10">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
+            <div>
+              <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                Scheduling conflict — cannot save
+              </p>
+              <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">
+                <strong>{conflict.prof}</strong> — {conflict.course_code} ({conflict.section}) is
+                already occupying this room and time slot. Pick a different slot to continue.
               </p>
             </div>
           </div>
@@ -660,7 +676,13 @@ function ReservationModal({
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" isLoading={isPending} loadingText="Saving...">
+          <Button
+            type="submit"
+            isLoading={isPending}
+            loadingText="Saving..."
+            disabled={isPending || !!conflict || checkingConflict}
+            title={conflict ? 'Resolve the scheduling conflict before saving' : undefined}
+          >
             {editItem ? 'Update' : 'Add Reservation'}
           </Button>
         </div>
