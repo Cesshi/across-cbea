@@ -51,6 +51,13 @@ export const DAY_PATTERN_MAP: Record<DayPattern, string[]> = {
   F: ['Friday'],
 };
 
+export function daysOverlap(dayA: string, dayB: string): boolean {
+  const expand = (d: string): string[] => DAY_PATTERN_MAP[d as DayPattern] ?? [d];
+  const a = expand(dayA);
+  const b = expand(dayB);
+  return a.some((d) => b.includes(d));
+}
+
 export const YEAR_LEVELS = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'] as const;
 
 // Converts "HH:MM" (24-hour, from type="time" inputs) to "H:MM AM/PM" for display.

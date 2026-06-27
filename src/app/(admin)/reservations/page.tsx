@@ -24,6 +24,7 @@ import {
   DAY_PATTERNS,
   RESERVATION_STATUSES,
   YEAR_LEVELS,
+  daysOverlap,
   formatTime,
   reservationSchema,
   type ReservationFormData,
@@ -393,7 +394,7 @@ function ReservationModal({
     () =>
       watchRoom && watchDay
         ? allApproved.filter(
-            (r) => r.room === watchRoom && r.day === watchDay && r.id !== editItem?.id
+            (r) => r.room === watchRoom && daysOverlap(r.day, watchDay) && r.id !== editItem?.id
           )
         : [],
     [allApproved, watchRoom, watchDay, editItem?.id]

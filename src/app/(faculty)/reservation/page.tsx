@@ -5,7 +5,13 @@ import { useApprovedReservations, useCreateReservation } from '@/components/hook
 import { useRooms } from '@/components/hooks/use-rooms';
 import { ConfirmDialog, Input, Select, Textarea } from '@/components/ui';
 import { requestSchema, type RequestFormData } from '@/lib';
-import { DAY_PATTERNS, RESTRICTED_ROOMS, YEAR_LEVELS, formatTime } from '@/lib/constants';
+import {
+  DAY_PATTERNS,
+  RESTRICTED_ROOMS,
+  YEAR_LEVELS,
+  daysOverlap,
+  formatTime,
+} from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -104,7 +110,7 @@ export default function ReservationPage() {
   const roomDayReservations = useMemo(
     () =>
       watchRoom && watchDay
-        ? allReservations.filter((r) => r.room === watchRoom && r.day === watchDay)
+        ? allReservations.filter((r) => r.room === watchRoom && daysOverlap(r.day, watchDay))
         : [],
     [allReservations, watchRoom, watchDay]
   );
