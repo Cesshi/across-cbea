@@ -210,7 +210,7 @@ export default function ImportSchedulePage() {
       }
 
       if (allRows.length === 0) {
-        toast.error('No valid rows found. Check the file format.');
+        toast.error('No valid rows found. Upload the official MMSU CBEA Class Schedule workbook.');
         return;
       }
 
