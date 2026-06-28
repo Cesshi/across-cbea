@@ -19,7 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { Profile } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { Pencil, Plus, PowerOff, Search, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Plus, PowerOff, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -235,6 +235,9 @@ function UserModal({
   onClose: () => void;
   editUser: Profile | null;
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const createMutation = useCreateProfile();
   const updateMutation = useUpdateProfile();
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -250,6 +253,7 @@ function UserModal({
       full_name: '',
       email: '',
       password: '',
+      confirmPassword: '',
       role: 'faculty',
       is_active: true,
     },
@@ -265,7 +269,14 @@ function UserModal({
               role: editUser.role as 'admin' | 'faculty',
               is_active: editUser.is_active,
             }
-          : { full_name: '', email: '', password: '', role: 'faculty', is_active: true }
+          : {
+              full_name: '',
+              email: '',
+              password: '',
+              confirmPassword: '',
+              role: 'faculty',
+              is_active: true,
+            }
       );
     }
   }, [isOpen, editUser, reset]);
@@ -276,7 +287,9 @@ function UserModal({
         await updateMutation.mutateAsync({ id: editUser.id, data: data as ProfileFormData });
         toast.success('User updated');
       } else {
-        await createMutation.mutateAsync(data as CreateUserFormData);
+        // Strip confirmPassword — it's only for UI validation
+        const { confirmPassword: _, ...createData } = data as CreateUserFormData;
+        await createMutation.mutateAsync(createData);
         toast.success('User created');
       }
       onClose();
@@ -316,15 +329,57 @@ function UserModal({
         />
 
         {!editUser && (
-          <Input
-            label="Password"
-            type="password"
-            required
-            placeholder="Min. 8 characters"
-            error={!!(errors as { password?: { message?: string } }).password}
-            hint={(errors as { password?: { message?: string } }).password?.message}
-            {...register('password')}
-          />
+          <>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password <span className="text-error-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 8 characters"
+                  error={!!(errors as { password?: { message?: string } }).password}
+                  hint={(errors as { password?: { message?: string } }).password?.message}
+                  className="pr-10"
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-all duration-200 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Confirm Password <span className="text-error-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Re-type your password"
+                  error={!!(errors as { confirmPassword?: { message?: string } }).confirmPassword}
+                  hint={
+                    (errors as { confirmPassword?: { message?: string } }).confirmPassword?.message
+                  }
+                  className="pr-10"
+                  {...register('confirmPassword')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((p) => !p)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-all duration-200 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         <Select

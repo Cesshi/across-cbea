@@ -39,13 +39,19 @@ export const profileSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-export const createUserSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  full_name: z.string().min(1, 'Full name is required'),
-  role: z.enum(['admin', 'faculty']),
-  is_active: z.boolean().default(true),
-});
+export const createUserSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    full_name: z.string().min(1, 'Full name is required'),
+    role: z.enum(['admin', 'faculty']),
+    is_active: z.boolean().default(true),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 /* ─── Room ─── */
 export const roomSchema = z.object({
