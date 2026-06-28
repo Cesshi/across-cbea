@@ -1,10 +1,18 @@
 import { cn } from '@/lib';
 import React from 'react';
 
-export function Table({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Table({
+  children,
+  className,
+  maxHeight = '70vh',
+}: {
+  children: React.ReactNode;
+  className?: string;
+  maxHeight?: string;
+}) {
   return (
-    <div className="shadow-theme-md overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
-      <div className="max-w-full overflow-x-auto">
+    <div className="shadow-theme-md overflow-clip rounded-xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
+      <div className="overflow-auto" style={{ maxHeight }}>
         <table className={cn('w-full border-collapse', className)}>{children}</table>
       </div>
     </div>
@@ -19,7 +27,9 @@ export function TableHeader({
   className?: string;
 }) {
   return (
-    <thead className={cn('border-b border-gray-100 dark:border-white/5', className)}>
+    <thead
+      className={cn('sticky top-0 z-1 border-b border-gray-100 dark:border-white/5', className)}
+    >
       {children}
     </thead>
   );
@@ -62,7 +72,7 @@ export function TableHead({
     <th
       onClick={onClick}
       className={cn(
-        'text-md bg-gray-50 px-5 py-3 text-start font-medium text-gray-500 dark:bg-white/3 dark:text-gray-400',
+        'text-md bg-gray-50 px-5 py-3 text-start font-medium text-gray-500 dark:bg-gray-900 dark:text-gray-400',
         className
       )}
     >

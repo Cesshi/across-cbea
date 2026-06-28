@@ -21,6 +21,8 @@ interface DataTableProps<TData> {
   globalFilter?: string;
   emptyMessage?: string;
   loading?: boolean;
+  /** Override the default 70vh max-height of the scroll container */
+  maxHeight?: string;
 }
 
 export function DataTable<TData>({
@@ -29,6 +31,7 @@ export function DataTable<TData>({
   globalFilter,
   emptyMessage = 'No results found',
   loading = false,
+  maxHeight,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -43,7 +46,7 @@ export function DataTable<TData>({
   });
 
   return (
-    <Table>
+    <Table maxHeight={maxHeight}>
       <TableHeader>
         {table.getHeaderGroups().map((hg) => (
           <TableRow key={hg.id}>
@@ -61,7 +64,7 @@ export function DataTable<TData>({
                     ) : header.column.getIsSorted() === 'desc' ? (
                       <ChevronDown size={13} />
                     ) : (
-                      <ChevronsUpDown size={13} className="text-gray-300" />
+                      <ChevronsUpDown size={13} className="text-gray-500" />
                     ))}
                 </span>
               </TableHead>
