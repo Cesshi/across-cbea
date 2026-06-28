@@ -1,92 +1,11 @@
 'use client';
 
+import { Spinner } from '@/components/ui';
 import { DAY_PATTERNS, formatTime, type DayPattern } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { Reservation, Room } from '@prisma/client';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-
-const PALETTE = [
-  {
-    // Sky blue
-    card: 'bg-sky-100 hover:bg-sky-200 dark:bg-sky-500/30 dark:hover:bg-sky-500/20',
-    time: 'text-sky-600 dark:text-sky-400',
-    name: 'text-sky-900 dark:text-sky-200',
-    sub: 'text-sky-700 dark:text-sky-300',
-    dot: 'bg-sky-500',
-  },
-  {
-    // Lime green
-    card: 'bg-lime-100 hover:bg-lime-200 dark:bg-lime-500/30 dark:hover:bg-lime-500/20',
-    time: 'text-lime-600 dark:text-lime-400',
-    name: 'text-lime-900 dark:text-lime-200',
-    sub: 'text-lime-700 dark:text-lime-300',
-    dot: 'bg-lime-500',
-  },
-  {
-    // Fuchsia/magenta
-    card: 'bg-fuchsia-100 hover:bg-fuchsia-200 dark:bg-fuchsia-500/30 dark:hover:bg-fuchsia-500/20',
-    time: 'text-fuchsia-600 dark:text-fuchsia-400',
-    name: 'text-fuchsia-900 dark:text-fuchsia-200',
-    sub: 'text-fuchsia-700 dark:text-fuchsia-300',
-    dot: 'bg-fuchsia-500',
-  },
-  {
-    // Amber/yellow
-    card: 'bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-500/30 dark:hover:bg-yellow-500/20',
-    time: 'text-yellow-600 dark:text-yellow-400',
-    name: 'text-yellow-900 dark:text-yellow-200',
-    sub: 'text-yellow-700 dark:text-yellow-300',
-    dot: 'bg-yellow-500',
-  },
-  {
-    // Red (stronger than rose)
-    card: 'bg-red-100 hover:bg-red-200 dark:bg-red-500/30 dark:hover:bg-red-500/20',
-    time: 'text-red-600 dark:text-red-400',
-    name: 'text-red-900 dark:text-red-200',
-    sub: 'text-red-700 dark:text-red-300',
-    dot: 'bg-red-500',
-  },
-  {
-    // Teal (clearly green-leaning, not blue)
-    card: 'bg-teal-100 hover:bg-teal-200 dark:bg-teal-500/30 dark:hover:bg-teal-500/20',
-    time: 'text-teal-600 dark:text-teal-400',
-    name: 'text-teal-900 dark:text-teal-200',
-    sub: 'text-teal-700 dark:text-teal-300',
-    dot: 'bg-teal-500',
-  },
-  {
-    // Orange (clearly different from yellow/amber)
-    card: 'bg-orange-100 hover:bg-orange-200 dark:bg-orange-500/30 dark:hover:bg-orange-500/20',
-    time: 'text-orange-600 dark:text-orange-400',
-    name: 'text-orange-900 dark:text-orange-200',
-    sub: 'text-orange-700 dark:text-orange-300',
-    dot: 'bg-orange-500',
-  },
-  {
-    // Violet/purple (deep, distinct from fuchsia)
-    card: 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-500/30 dark:hover:bg-purple-500/20',
-    time: 'text-purple-600 dark:text-purple-400',
-    name: 'text-purple-900 dark:text-purple-200',
-    sub: 'text-purple-700 dark:text-purple-300',
-    dot: 'bg-purple-500',
-  },
-  {
-    // Rose/pink (warm, different from red)
-    card: 'bg-pink-100 hover:bg-pink-200 dark:bg-pink-500/30 dark:hover:bg-pink-500/20',
-    time: 'text-pink-600 dark:text-pink-400',
-    name: 'text-pink-900 dark:text-pink-200',
-    sub: 'text-pink-700 dark:text-pink-300',
-    dot: 'bg-pink-500',
-  },
-  {
-    // Emerald (deep green, clearly distinct from lime/teal)
-    card: 'bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-500/30 dark:hover:bg-emerald-500/20',
-    time: 'text-emerald-600 dark:text-emerald-400',
-    name: 'text-emerald-900 dark:text-emerald-200',
-    sub: 'text-emerald-700 dark:text-emerald-300',
-    dot: 'bg-emerald-500',
-  },
-] as const;
 
 type PaletteEntry = (typeof PALETTE)[number];
 
@@ -97,28 +16,6 @@ const TIME_COL_W = 68;
 const ROOM_COL_W = 164;
 const PILLS_H = 48;
 const BODY_PAD = 16; // vertical breathing room so first/last labels don't clip
-
-function parseTimeToMinutes(t: string): number {
-  const trimmed = t.trim();
-  const hhmm = trimmed.match(/^(\d{1,2}):(\d{2})$/);
-  if (hhmm) return parseInt(hhmm[1]) * 60 + parseInt(hhmm[2]);
-  const ampm = trimmed.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
-  if (ampm) {
-    let h = parseInt(ampm[1]);
-    const m = parseInt(ampm[2]);
-    const period = ampm[3].toUpperCase();
-    if (period === 'PM' && h !== 12) h += 12;
-    if (period === 'AM' && h === 12) h = 0;
-    return h * 60 + m;
-  }
-  return 0;
-}
-
-function formatHour(hour: number): string {
-  if (hour === 12) return '12 PM';
-  if (hour > 12) return `${hour - 12} PM`;
-  return `${hour} AM`;
-}
 
 export interface ScheduleGridProps {
   reservations: Reservation[];
@@ -137,6 +34,7 @@ export function ScheduleGrid({
 }: ScheduleGridProps) {
   const [activePattern, setActivePattern] = useState<DayPattern>(defaultPattern);
   const [tooltip, setTooltip] = useState<{ r: Reservation; x: number; y: number } | null>(null);
+  const [legendOpen, setLegendOpen] = useState(true);
   const [stickyHeaderH, setStickyHeaderH] = useState(PILLS_H);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
 
@@ -197,14 +95,14 @@ export function ScheduleGrid({
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+        <Spinner size="md" center />
       </div>
     );
   }
 
   return (
     <div
-      className="overflow-auto rounded-xl border border-gray-200 dark:border-gray-800"
+      className="relative z-0 overflow-auto rounded-xl border border-gray-200 dark:border-gray-800"
       style={{ maxHeight }}
     >
       {/*
@@ -237,16 +135,30 @@ export function ScheduleGrid({
         </div>
         {/* Course legend */}
         {courseColorMap.size > 0 && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 dark:border-gray-800">
-            {[...courseColorMap.entries()].map(([course, color]) => (
-              <span
-                key={course}
-                className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400"
-              >
-                <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', color.dot)} />
-                {course}
+          <div className="border-t border-gray-100 dark:border-gray-800">
+            <button
+              onClick={() => setLegendOpen((o) => !o)}
+              className="flex w-full items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {legendOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              Course Legend
+              <span className="ml-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                {courseColorMap.size}
               </span>
-            ))}
+            </button>
+            {legendOpen && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pb-2">
+                {[...courseColorMap.entries()].map(([course, color]) => (
+                  <span
+                    key={course}
+                    className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400"
+                  >
+                    <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', color.dot)} />
+                    {course}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -378,3 +290,108 @@ export function ScheduleGrid({
     </div>
   );
 }
+
+function parseTimeToMinutes(t: string): number {
+  const trimmed = t.trim();
+  const hhmm = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (hhmm) return parseInt(hhmm[1]) * 60 + parseInt(hhmm[2]);
+  const ampm = trimmed.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+  if (ampm) {
+    let h = parseInt(ampm[1]);
+    const m = parseInt(ampm[2]);
+    const period = ampm[3].toUpperCase();
+    if (period === 'PM' && h !== 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  }
+  return 0;
+}
+
+function formatHour(hour: number): string {
+  if (hour === 12) return '12 PM';
+  if (hour > 12) return `${hour - 12} PM`;
+  return `${hour} AM`;
+}
+
+const PALETTE = [
+  {
+    // Sky blue
+    card: 'bg-sky-100 hover:bg-sky-200 dark:bg-sky-500/30 dark:hover:bg-sky-500/20',
+    time: 'text-sky-600 dark:text-sky-400',
+    name: 'text-sky-900 dark:text-sky-200',
+    sub: 'text-sky-700 dark:text-sky-300',
+    dot: 'bg-sky-500',
+  },
+  {
+    // Lime green
+    card: 'bg-lime-100 hover:bg-lime-200 dark:bg-lime-500/30 dark:hover:bg-lime-500/20',
+    time: 'text-lime-600 dark:text-lime-400',
+    name: 'text-lime-900 dark:text-lime-200',
+    sub: 'text-lime-700 dark:text-lime-300',
+    dot: 'bg-lime-500',
+  },
+  {
+    // Fuchsia/magenta
+    card: 'bg-fuchsia-100 hover:bg-fuchsia-200 dark:bg-fuchsia-500/30 dark:hover:bg-fuchsia-500/20',
+    time: 'text-fuchsia-600 dark:text-fuchsia-400',
+    name: 'text-fuchsia-900 dark:text-fuchsia-200',
+    sub: 'text-fuchsia-700 dark:text-fuchsia-300',
+    dot: 'bg-fuchsia-500',
+  },
+  {
+    // Amber/yellow
+    card: 'bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-500/30 dark:hover:bg-yellow-500/20',
+    time: 'text-yellow-600 dark:text-yellow-400',
+    name: 'text-yellow-900 dark:text-yellow-200',
+    sub: 'text-yellow-700 dark:text-yellow-300',
+    dot: 'bg-yellow-500',
+  },
+  {
+    // Red (stronger than rose)
+    card: 'bg-red-100 hover:bg-red-200 dark:bg-red-500/30 dark:hover:bg-red-500/20',
+    time: 'text-red-600 dark:text-red-400',
+    name: 'text-red-900 dark:text-red-200',
+    sub: 'text-red-700 dark:text-red-300',
+    dot: 'bg-red-500',
+  },
+  {
+    // Teal (clearly green-leaning, not blue)
+    card: 'bg-teal-100 hover:bg-teal-200 dark:bg-teal-500/30 dark:hover:bg-teal-500/20',
+    time: 'text-teal-600 dark:text-teal-400',
+    name: 'text-teal-900 dark:text-teal-200',
+    sub: 'text-teal-700 dark:text-teal-300',
+    dot: 'bg-teal-500',
+  },
+  {
+    // Orange (clearly different from yellow/amber)
+    card: 'bg-orange-100 hover:bg-orange-200 dark:bg-orange-500/30 dark:hover:bg-orange-500/20',
+    time: 'text-orange-600 dark:text-orange-400',
+    name: 'text-orange-900 dark:text-orange-200',
+    sub: 'text-orange-700 dark:text-orange-300',
+    dot: 'bg-orange-500',
+  },
+  {
+    // Violet/purple (deep, distinct from fuchsia)
+    card: 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-500/30 dark:hover:bg-purple-500/20',
+    time: 'text-purple-600 dark:text-purple-400',
+    name: 'text-purple-900 dark:text-purple-200',
+    sub: 'text-purple-700 dark:text-purple-300',
+    dot: 'bg-purple-500',
+  },
+  {
+    // Rose/pink (warm, different from red)
+    card: 'bg-pink-100 hover:bg-pink-200 dark:bg-pink-500/30 dark:hover:bg-pink-500/20',
+    time: 'text-pink-600 dark:text-pink-400',
+    name: 'text-pink-900 dark:text-pink-200',
+    sub: 'text-pink-700 dark:text-pink-300',
+    dot: 'bg-pink-500',
+  },
+  {
+    // Emerald (deep green, clearly distinct from lime/teal)
+    card: 'bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-500/30 dark:hover:bg-emerald-500/20',
+    time: 'text-emerald-600 dark:text-emerald-400',
+    name: 'text-emerald-900 dark:text-emerald-200',
+    sub: 'text-emerald-700 dark:text-emerald-300',
+    dot: 'bg-emerald-500',
+  },
+] as const;
