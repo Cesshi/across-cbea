@@ -27,9 +27,7 @@ export function TableHeader({
   className?: string;
 }) {
   return (
-    <thead
-      className={cn('sticky top-0 z-1 border-b border-gray-100 dark:border-white/5', className)}
-    >
+    <thead className={cn('sticky top-0 border-b border-gray-100 dark:border-white/5', className)}>
       {children}
     </thead>
   );
