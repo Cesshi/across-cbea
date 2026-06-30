@@ -323,7 +323,7 @@ export default function ImportSchedulePage() {
             {previewMutation.isPending && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-                Parsing file...
+                Parsing file... Don't navigate away or this will be cancelled
               </div>
             )}
           </div>
