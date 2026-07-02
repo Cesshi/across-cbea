@@ -16,8 +16,7 @@
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [Developer](#developer)
-- [License](#license)
-
+  
 ---
 
 ## Features
@@ -134,7 +133,7 @@ Contributions, issues, and feature requests are welcome!
 
 ---
 
-## Developer/s
+## Developer
 
 **Cecilia Marie Invencion** — Lead Developer
 **James Russell Cayetano** — UI Design
