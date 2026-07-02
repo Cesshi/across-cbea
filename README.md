@@ -136,6 +136,7 @@ Contributions, issues, and feature requests are welcome!
 ## Developer
 
 **Cecilia Marie Invencion** — Lead Developer
+
 **James Russell Cayetano** — UI Design
 
 ---
